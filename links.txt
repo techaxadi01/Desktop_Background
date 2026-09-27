@@ -1,0 +1,13 @@
+# =======================================================================
+# CONSOLE QUICK LINKS (Plain Text Format)
+# =======================================================================
+# Add links one per line using the format:
+# Name | URL | Icon
+#
+# Available icon examples from Lucide:
+# graduation-cap, landmark, globe, book-open, github, code, mail, folder,
+# play, music, message-circle, external-link, link
+# =======================================================================
+
+Google Classroom | https://classroom.google.com/u/1/ | graduation-cap
+Christ University Portal (CUE) | https://cue.christuniversity.in/ | landmark

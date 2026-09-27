@@ -1,0 +1,9 @@
+# =======================================================================
+# MY DAY - DAILY TASK CHECKLIST
+# =======================================================================
+# Add one daily task per line below.
+# Lines starting with '#' and blank lines are ignored.
+# These tasks repeat every day as your daily routine checklist.
+# Check them off directly on the wallpaper!
+# =======================================================================
+

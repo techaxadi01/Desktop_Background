@@ -1,0 +1,625 @@
+/* Live Wallpaper Custom Styles & Design System */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@500;700;900&display=swap');
+
+:root {
+  interpolate-size: allow-keywords;
+  --neon-green: #10b981;
+  --neon-glow: rgba(16, 185, 129, 0.45);
+  --neon-rotor: #00ff88;
+  --glass-bg: rgba(10, 15, 20, 0.48);
+  --glass-border: rgba(52, 211, 153, 0.20);
+  --glass-hover: rgba(16, 185, 129, 0.10);
+  --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  background-color: #05080c;
+  color: #e2e8f0;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.font-display {
+  font-family: 'Orbitron', sans-serif;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--panel-shadow);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.65), 0 0 15px rgba(16, 185, 129, 0.15);
+}
+
+/* Lucide SVG Icon Rendering */
+svg.lucide, .lucide {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.glass-pill {
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(52, 211, 153, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.neon-border {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 12px var(--neon-glow);
+}
+
+.neon-text-glow {
+  text-shadow: 0 0 12px rgba(16, 185, 129, 0.7), 0 0 24px rgba(0, 255, 136, 0.4);
+}
+
+.neon-clock-glow {
+  text-shadow: 0 0 20px rgba(0, 255, 136, 0.6), 0 0 40px rgba(16, 185, 129, 0.3);
+}
+
+#clock-time {
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+  margin-right: -0.14em;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 15, 20, 0.4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.35);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.75);
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 1;
+    filter: none;
+  }
+}
+
+.animate-pulse-glow {
+  animation: none !important;
+}
+
+@keyframes flameWiggle {
+
+  0%,
+  100% {
+    transform: scale(1) rotate(-2deg);
+  }
+
+  50% {
+    transform: scale(1.12) rotate(3deg);
+  }
+}
+
+.animate-flame {
+  animation: flameWiggle 1.5s infinite ease-in-out;
+}
+
+/* Live Background Transitions */
+#bg-container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('BG.jpg');
+  background-size: cover;
+  background-position: center center;
+  transition: opacity 1.2s ease-in-out;
+  z-index: 0;
+}
+
+#bg-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.2;
+  transition: background 1.5s ease, opacity 0.5s ease;
+}
+
+/* Visibility / Focus Mode: Hides Scheduler and To-Do, while keeping Clock, Timetable, Streak, and Console visible */
+body.focus-mode #scheduler-container,
+body.focus-mode #todo-container {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+body.focus-mode #clock-container,
+body.focus-mode #timetable-container,
+body.focus-mode #console-container,
+body.focus-mode #streak-container {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: none !important;
+}
+
+.wallpaper-widget {
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Calendar Dropdown (Click Toggle - Matches Clock Width Exactly) */
+.calendar-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.98);
+  transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+  pointer-events: none;
+}
+
+.calendar-dropdown.active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.cal-day-cell {
+  height: 24px;
+  width: 24px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.15s ease;
+}
+
+.cal-day-cell:hover:not(.empty-cell):not(.today-cell) {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+
+.cal-day-cell.today-cell {
+  background: #10b981;
+  color: #05080c;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.85);
+}
+
+.cal-day-cell.other-month {
+  opacity: 0.3;
+}
+
+/* Streak Container & Expansion (Default: 104px compact, Expanded: 220px ~210% with dates) */
+#streak-container {
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+#streak-container.is-expanded {
+  width: 220px !important;
+  z-index: 45;
+}
+
+#streak-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#streak-container.is-expanded #streak-card {
+  box-shadow: 0 16px 40px 0 rgba(0, 0, 0, 0.75), 0 0 20px rgba(16, 185, 129, 0.25);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+/* Streak Day Boxes (Month: 10x10px, Expanded: 24x24px with dates, Week: 12x12px) */
+.streak-day-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+#streak-container:not(.is-expanded) #streak-card,
+#streak-container:not(.is-expanded) .streak-day-box,
+#streak-container:not(.is-expanded) #streak-days-grid {
+  cursor: pointer !important;
+}
+
+#streak-container.is-expanded .streak-expanded-box {
+  cursor: default;
+}
+
+.streak-month-box {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.streak-week-box {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Expanded Streak Date Cells: 24x24px, Clear Day Numbers */
+.streak-expanded-box {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
+}
+
+.streak-day-box:hover,
+.streak-expanded-box:hover {
+  transform: scale(1.18);
+  z-index: 10;
+}
+
+.streak-today-box {
+  background: rgba(37, 99, 235, 0.85) !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.9), inset 0 0 2px rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  font-weight: 800;
+}
+
+.streak-today-box:hover {
+  transform: scale(1.22);
+  box-shadow: 0 0 14px rgba(96, 165, 250, 1), inset 0 0 4px rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Upcoming / Unreached Streak Day Boxes (Darkened, distinct borders across Weekly, Compact & Maximise) */
+.streak-upcoming-box {
+  background: rgba(0, 0, 0, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: none !important;
+}
+
+.streak-expanded-box.streak-upcoming-box {
+  color: rgba(148, 163, 184, 0.6) !important;
+}
+
+.streak-upcoming-box:hover {
+  border-color: rgba(255, 255, 255, 0.42) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+
+
+.tt-slot-row {
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  position: relative;
+}
+
+.tt-slot-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.tt-slot-row.is-live {
+  background: rgba(16, 185, 129, 0.15) !important;
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(52, 211, 153, 0.8) !important;
+  border-color: rgba(52, 211, 153, 0.8) !important;
+  box-shadow: 0 0 12px var(--neon-glow) !important;
+  color: #a7f3d0 !important;
+}
+
+.tt-slot-row.is-live:hover {
+  transform: translateY(-1px);
+  border-color: #34d399 !important;
+  box-shadow: 0 0 16px var(--neon-glow) !important;
+}
+
+/* Zero-scrollbar & dynamic height adaptation for Timetable widget */
+#timetable-container {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+#timetable-card {
+  height: auto !important;
+  max-height: none !important;
+  overflow: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+#timetable-card::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#tt-slots-list {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+#tt-slots-list::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+#scheduler-container {
+  transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#todo-container {
+  transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, transform 0.35s ease;
+}
+
+#my-day-card {
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  height: 100%;
+  overflow: hidden;
+}
+
+.my-day-icon {
+  transition: opacity 0.25s ease, width 0.25s ease, margin 0.25s ease;
+  width: 14px;
+  opacity: 1;
+}
+
+#my-day-card.is-minimized .my-day-icon {
+  width: 0;
+  opacity: 0;
+  margin: 0 !important;
+  margin-right: -6px !important;
+  overflow: hidden;
+}
+
+#my-day-chevron {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+#my-day-card.is-minimized #my-day-chevron {
+  transform: rotate(0deg) !important;
+}
+
+#my-day-card:not(.is-minimized) #my-day-chevron {
+  transform: rotate(180deg) !important;
+}
+
+#my-day-body {
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#my-day-card.is-minimized #my-day-body {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(-6px);
+}
+
+.my-day-item {
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+}
+
+.my-day-item:hover {
+  transform: translateY(-1px);
+}
+
+#my-day-tasks-list::-webkit-scrollbar,
+#task-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+#my-day-tasks-list::-webkit-scrollbar-track,
+#task-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#my-day-tasks-list::-webkit-scrollbar-thumb,
+#task-list::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.3);
+  border-radius: 2px;
+}
+
+#my-day-tasks-list::-webkit-scrollbar-thumb:hover,
+#task-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.6);
+}
+
+#console-container {
+  transition: top 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease, transform 0.35s ease;
+}
+
+
+/* Ensure text inputs and textareas receive single-click focus and caret positioning */
+input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]),
+textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+select {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  cursor: pointer !important;
+}
+
+#category-picker-capsule {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+#category-picker-capsule:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+#todo-category-dropdown {
+  background: rgba(10, 15, 22, 0.95) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.85), 0 0 15px rgba(16, 185, 129, 0.25);
+  animation: todoCatFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes todoCatFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#date-picker-capsule {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+#date-picker-capsule:hover {
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+#todo-calendar-dropdown {
+  background: rgba(10, 15, 22, 0.95) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(52, 211, 153, 0.35) !important;
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.85), 0 0 15px rgba(16, 185, 129, 0.25);
+  animation: todoCalFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes todoCalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#new-task-category option {
+  background-color: #0b1118;
+  padding: 4px 8px;
+}
+
+#new-task-category option[value="College Task"] {
+  color: #34d399 !important;
+}
+
+#new-task-category option[value="College Exams"] {
+  color: #fbbf24 !important;
+}
+
+#new-task-category option[value="Last Date for Stuff"] {
+  color: #f43f5e !important;
+}
+
+#new-task-category option[value="Competitive Exams"] {
+  color: #c084fc !important;
+}
+
+/* Expanded Timetable Modal - 60% Viewport Bounds, Reduced Blur, Emerald Glass Widget Padding */
+#timetable-modal {
+  background: rgba(5, 8, 12, 0.35) !important;
+  backdrop-filter: blur(3px) !important;
+  -webkit-backdrop-filter: blur(3px) !important;
+}
+
+#tt-modal-card {
+  max-width: 60vw !important;
+  max-height: 60vh !important;
+  width: min(60vw, calc((60vh - 12px) * 2.855 + 12px));
+  height: auto !important;
+  padding: 6px !important;
+  border-radius: 1rem !important;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(10, 25, 28, 0.78)) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(52, 211, 153, 0.45) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(16, 185, 129, 0.35) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#tt-image-element {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 0.75rem !important;
+  border: 1px solid rgba(52, 211, 153, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45) !important;
+}

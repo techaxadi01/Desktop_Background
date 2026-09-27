@@ -1,0 +1,28 @@
+{
+  "userName": {
+    "type": "textbox",
+    "value": "Pilot",
+    "text": "Callsign / User Name"
+  },
+  "timeFormat": {
+    "type": "dropdown",
+    "value": 1,
+    "items": [
+      "12-Hour AM/PM",
+      "24-Hour Military"
+    ],
+    "text": "Time Format"
+  },
+  "bgMode": {
+    "type": "dropdown",
+    "value": "auto",
+    "items": [
+      "auto",
+      "night",
+      "sunset",
+      "day",
+      "dawn"
+    ],
+    "text": "Time-based Background Theme"
+  }
+}

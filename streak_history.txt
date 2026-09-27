@@ -1,0 +1,9 @@
+# ====================================================================
+# STREAK HISTORY - PREVIOUS MONTHS (Daily Task Completion %)
+# ====================================================================
+# This file stores task completion history for PREVIOUS months.
+# Format: YYYY-MM-DD: percentage (0 to 100)
+# Lines starting with # are comments.
+# When you click the streak widget to view previous months, this file is fetched.
+# ====================================================================
+
