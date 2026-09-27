@@ -395,6 +395,14 @@ function renderCalendar() {
 
   gridElem.innerHTML = "";
 
+  // Set of dates with active scheduled To-Do tasks (YYYY-MM-DD)
+  const scheduledTaskDates = new Set();
+  (state.tasks || []).forEach(t => {
+    if (!t.done && t.date) {
+      scheduledTaskDates.add(t.date);
+    }
+  });
+
   // First day of current displayed month (0 = Sunday, 1 = Monday ... 6 = Saturday)
   const firstDay = new Date(calendarState.year, calendarState.month, 1).getDay();
   const startOffset = (firstDay + 6) % 7; // Convert to Monday = 0
@@ -406,29 +414,45 @@ function renderCalendar() {
   const prevMonthDays = new Date(calendarState.year, calendarState.month, 0).getDate();
 
   // 1. Previous month filler cells
+  const prevMonth = calendarState.month === 0 ? 11 : calendarState.month - 1;
+  const prevYear = calendarState.month === 0 ? calendarState.year - 1 : calendarState.year;
   for (let i = startOffset - 1; i >= 0; i--) {
+    const dVal = prevMonthDays - i;
+    const dateKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(dVal).padStart(2, "0")}`;
+    const hasScheduledTask = scheduledTaskDates.has(dateKey);
     const cell = document.createElement("div");
-    cell.className = "cal-day-cell text-gray-600 other-month";
-    cell.textContent = prevMonthDays - i;
+    cell.className = `cal-day-cell text-gray-600 other-month ${hasScheduledTask ? "has-task" : ""}`;
+    cell.textContent = dVal;
     gridElem.appendChild(cell);
   }
 
-  // 2. Current month active date cells
+  // 2. Current month active date cells (circled if task is scheduled)
   for (let d = 1; d <= totalDays; d++) {
     const cell = document.createElement("div");
     const isToday = (calendarState.year === todayYear && calendarState.month === todayMonth && d === todayDate);
+    const dateKey = `${calendarState.year}-${String(calendarState.month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const hasScheduledTask = scheduledTaskDates.has(dateKey);
 
-    cell.className = `cal-day-cell cursor-pointer ${isToday ? "today-cell" : "text-gray-300"}`;
+    let cellClasses = "cal-day-cell cursor-pointer";
+    if (isToday) cellClasses += " today-cell";
+    else cellClasses += " text-gray-300";
+    if (hasScheduledTask) cellClasses += " has-task";
+
+    cell.className = cellClasses;
     cell.textContent = d;
     gridElem.appendChild(cell);
   }
 
   // 3. Next month filler cells to make full rows of 7
+  const nextMonth = calendarState.month === 11 ? 0 : calendarState.month + 1;
+  const nextYear = calendarState.month === 11 ? calendarState.year + 1 : calendarState.year;
   const totalRendered = startOffset + totalDays;
   const remaining = (7 - (totalRendered % 7)) % 7;
   for (let n = 1; n <= remaining; n++) {
+    const dateKey = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-${String(n).padStart(2, "0")}`;
+    const hasScheduledTask = scheduledTaskDates.has(dateKey);
     const cell = document.createElement("div");
-    cell.className = "cal-day-cell text-gray-600 other-month";
+    cell.className = `cal-day-cell text-gray-600 other-month ${hasScheduledTask ? "has-task" : ""}`;
     cell.textContent = n;
     gridElem.appendChild(cell);
   }
@@ -1076,6 +1100,7 @@ function renderTasks() {
       </div>
     `;
     safeCreateIcons();
+    renderCalendar();
     if (typeof window.syncTimetableLayout === "function") {
       window.syncTimetableLayout();
       requestAnimationFrame(window.syncTimetableLayout);
@@ -1157,6 +1182,7 @@ function renderTasks() {
   });
 
   safeCreateIcons();
+  renderCalendar();
   if (typeof window.syncTimetableLayout === "function") {
     window.syncTimetableLayout();
     requestAnimationFrame(window.syncTimetableLayout);

@@ -215,6 +215,7 @@ body.focus-mode #streak-container {
   font-size: 11px;
   font-family: 'JetBrains Mono', monospace;
   transition: all 0.15s ease;
+  box-sizing: border-box;
 }
 
 .cal-day-cell:hover:not(.empty-cell):not(.today-cell) {
@@ -229,8 +230,42 @@ body.focus-mode #streak-container {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.85);
 }
 
+/* Highlight and circle dates with scheduled To-Do tasks (Bold Cyber-Amber/Gold Ring) */
+.cal-day-cell.has-task {
+  border-radius: 50% !important;
+  border: 2px solid #fbbf24 !important; /* Bold Cyber Amber / Gold Ring */
+  background: rgba(251, 191, 36, 0.16) !important; /* Warm Luminous Tint */
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.7), inset 0 0 5px rgba(251, 191, 36, 0.3) !important;
+}
+
+/* When today is also a scheduled task date */
+.cal-day-cell.today-cell.has-task {
+  background: #10b981 !important;
+  color: #05080c !important;
+  border: 2.5px solid #fbbf24 !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.9), 0 0 8px rgba(16, 185, 129, 0.85) !important;
+}
+
+.cal-day-cell.has-task:hover:not(.today-cell) {
+  background: rgba(251, 191, 36, 0.3) !important;
+  border-color: #fef08a !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 6px rgba(251, 191, 36, 0.4) !important;
+  transform: scale(1.08);
+}
+
 .cal-day-cell.other-month {
   opacity: 0.3;
+}
+
+.cal-day-cell.other-month.has-task {
+  border-radius: 50% !important;
+  border: 1.5px solid rgba(251, 191, 36, 0.55) !important;
+  background: rgba(251, 191, 36, 0.1) !important;
+  color: rgba(253, 224, 71, 0.75) !important;
+  opacity: 0.65;
 }
 
 /* Streak Container & Expansion (Default: 104px compact, Expanded: 220px ~210% with dates) */
