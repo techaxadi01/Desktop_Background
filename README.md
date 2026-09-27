@@ -11,7 +11,7 @@ Built with an offline-first architecture, glassmorphic emerald aesthetics, dynam
 ### 🕒 1. Tactical Clock & Interactive Calendar
 - **Digital Clock**: 24-hour or 12-hour display with neon glow and day/date indicator.
 - **Interactive Calendar Dropdown**: Click the clock card to toggle the full-month interactive calendar.
-- **🎯 Scheduled Task Highlighting**: Automatically scans your scheduled To-Do tasks and **circles dates in bold Cyber-Amber / Gold (`#fbbf24`)** with a warm luminous backdrop. Today's date with a task displays a dual gold-over-emerald tactical badge.
+- **🎯 Category-Colored Calendar Highlighting**: Automatically scans active scheduled tasks and circles calendar dates in the category's glow color (Rose `#f43f5e` for *Last Date for Stuff*, Purple `#c084fc` for *Competitive Exams*, Amber `#fbbf24` for *College Exams*, and Emerald `#34d399` for *College Task*). When multiple tasks fall on the same date, conflicts resolve automatically by priority: **Last Date > Competitive Exam > College Exam > College Task**.
 
 ### 🔥 2. Consistency Streak Heatmap
 - **Contribution Heatmap**: Visual month-at-a-glance habit tracker showing daily completion percentages.

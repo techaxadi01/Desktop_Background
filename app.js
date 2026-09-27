@@ -395,11 +395,42 @@ function renderCalendar() {
 
   gridElem.innerHTML = "";
 
-  // Set of dates with active scheduled To-Do tasks (YYYY-MM-DD)
-  const scheduledTaskDates = new Set();
+  // Category priority hierarchy for calendar highlight:
+  // Priority 1: Last Date for Stuff (Rose)
+  // Priority 2: Competitive Exams (Purple)
+  // Priority 3: College Exams (Amber)
+  // Priority 4: College Task (Emerald - default)
+  const CATEGORY_PRIORITY = {
+    "last date for stuff": 1,
+    "last date": 1,
+    "urgent": 1,
+    "competitive exams": 2,
+    "competitive exam": 2,
+    "project": 2,
+    "college exams": 3,
+    "college exam": 3,
+    "study": 3,
+    "college task": 4,
+    "college": 4
+  };
+
+  const PRIORITY_CLASS_MAP = {
+    1: "has-task-rose",
+    2: "has-task-purple",
+    3: "has-task-amber",
+    4: "has-task-emerald"
+  };
+
+  // Map of date string (YYYY-MM-DD) -> highest priority category (1 is highest)
+  const scheduledTaskDatePriorities = new Map();
   (state.tasks || []).forEach(t => {
     if (!t.done && t.date) {
-      scheduledTaskDates.add(t.date);
+      const catKey = (t.category || "").trim().toLowerCase();
+      const priority = CATEGORY_PRIORITY[catKey] || 4;
+      const currentHighest = scheduledTaskDatePriorities.get(t.date);
+      if (currentHighest === undefined || priority < currentHighest) {
+        scheduledTaskDatePriorities.set(t.date, priority);
+      }
     }
   });
 
@@ -419,9 +450,11 @@ function renderCalendar() {
   for (let i = startOffset - 1; i >= 0; i--) {
     const dVal = prevMonthDays - i;
     const dateKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}-${String(dVal).padStart(2, "0")}`;
-    const hasScheduledTask = scheduledTaskDates.has(dateKey);
+    const priority = scheduledTaskDatePriorities.get(dateKey);
+    const hasScheduledTask = priority !== undefined;
+    const taskColorClass = hasScheduledTask ? (PRIORITY_CLASS_MAP[priority] || "has-task-emerald") : "";
     const cell = document.createElement("div");
-    cell.className = `cal-day-cell text-gray-600 other-month ${hasScheduledTask ? "has-task" : ""}`;
+    cell.className = `cal-day-cell text-gray-600 other-month ${hasScheduledTask ? `has-task ${taskColorClass}` : ""}`;
     cell.textContent = dVal;
     gridElem.appendChild(cell);
   }
@@ -431,12 +464,14 @@ function renderCalendar() {
     const cell = document.createElement("div");
     const isToday = (calendarState.year === todayYear && calendarState.month === todayMonth && d === todayDate);
     const dateKey = `${calendarState.year}-${String(calendarState.month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const hasScheduledTask = scheduledTaskDates.has(dateKey);
+    const priority = scheduledTaskDatePriorities.get(dateKey);
+    const hasScheduledTask = priority !== undefined;
+    const taskColorClass = hasScheduledTask ? (PRIORITY_CLASS_MAP[priority] || "has-task-emerald") : "";
 
     let cellClasses = "cal-day-cell cursor-pointer";
     if (isToday) cellClasses += " today-cell";
     else cellClasses += " text-gray-300";
-    if (hasScheduledTask) cellClasses += " has-task";
+    if (hasScheduledTask) cellClasses += ` has-task ${taskColorClass}`;
 
     cell.className = cellClasses;
     cell.textContent = d;
@@ -450,9 +485,11 @@ function renderCalendar() {
   const remaining = (7 - (totalRendered % 7)) % 7;
   for (let n = 1; n <= remaining; n++) {
     const dateKey = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}-${String(n).padStart(2, "0")}`;
-    const hasScheduledTask = scheduledTaskDates.has(dateKey);
+    const priority = scheduledTaskDatePriorities.get(dateKey);
+    const hasScheduledTask = priority !== undefined;
+    const taskColorClass = hasScheduledTask ? (PRIORITY_CLASS_MAP[priority] || "has-task-emerald") : "";
     const cell = document.createElement("div");
-    cell.className = `cal-day-cell text-gray-600 other-month ${hasScheduledTask ? "has-task" : ""}`;
+    cell.className = `cal-day-cell text-gray-600 other-month ${hasScheduledTask ? `has-task ${taskColorClass}` : ""}`;
     cell.textContent = n;
     gridElem.appendChild(cell);
   }

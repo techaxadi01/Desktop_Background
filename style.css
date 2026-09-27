@@ -230,30 +230,20 @@ body.focus-mode #streak-container {
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.85);
 }
 
-/* Highlight and circle dates with scheduled To-Do tasks (Bold Cyber-Amber/Gold Ring) */
+/* Base scheduled task date highlight (Circled date) */
 .cal-day-cell.has-task {
   border-radius: 50% !important;
-  border: 2px solid #fbbf24 !important; /* Bold Cyber Amber / Gold Ring */
-  background: rgba(251, 191, 36, 0.16) !important; /* Warm Luminous Tint */
-  color: #ffffff !important;
   font-weight: 800 !important;
-  box-shadow: 0 0 10px rgba(251, 191, 36, 0.7), inset 0 0 5px rgba(251, 191, 36, 0.3) !important;
-}
-
-/* When today is also a scheduled task date */
-.cal-day-cell.today-cell.has-task {
-  background: #10b981 !important;
-  color: #05080c !important;
-  border: 2.5px solid #fbbf24 !important;
-  box-shadow: 0 0 14px rgba(251, 191, 36, 0.9), 0 0 8px rgba(16, 185, 129, 0.85) !important;
+  color: #ffffff !important;
 }
 
 .cal-day-cell.has-task:hover:not(.today-cell) {
-  background: rgba(251, 191, 36, 0.3) !important;
-  border-color: #fef08a !important;
-  color: #ffffff !important;
-  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 6px rgba(251, 191, 36, 0.4) !important;
   transform: scale(1.08);
+}
+
+.cal-day-cell.today-cell.has-task {
+  background: #10b981 !important;
+  color: #05080c !important;
 }
 
 .cal-day-cell.other-month {
@@ -262,10 +252,91 @@ body.focus-mode #streak-container {
 
 .cal-day-cell.other-month.has-task {
   border-radius: 50% !important;
-  border: 1.5px solid rgba(251, 191, 36, 0.55) !important;
-  background: rgba(251, 191, 36, 0.1) !important;
-  color: rgba(253, 224, 71, 0.75) !important;
   opacity: 0.65;
+}
+
+/* 1. Last Date for Stuff (Priority 1: Rose / Red #f43f5e) */
+.cal-day-cell.has-task-rose {
+  border: 2px solid #f43f5e !important;
+  background: rgba(244, 63, 94, 0.18) !important;
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.7), inset 0 0 5px rgba(244, 63, 94, 0.3) !important;
+}
+.cal-day-cell.has-task-rose:hover:not(.today-cell) {
+  background: rgba(244, 63, 94, 0.32) !important;
+  border-color: #fda4af !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.95), inset 0 0 6px rgba(244, 63, 94, 0.4) !important;
+}
+.cal-day-cell.today-cell.has-task-rose {
+  border: 2.5px solid #f43f5e !important;
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.95), 0 0 8px rgba(16, 185, 129, 0.85) !important;
+}
+.cal-day-cell.other-month.has-task-rose {
+  border: 1.5px solid rgba(244, 63, 94, 0.6) !important;
+  background: rgba(244, 63, 94, 0.12) !important;
+  color: rgba(253, 164, 175, 0.85) !important;
+}
+
+/* 2. Competitive Exams (Priority 2: Purple #c084fc) */
+.cal-day-cell.has-task-purple {
+  border: 2px solid #c084fc !important;
+  background: rgba(192, 132, 252, 0.18) !important;
+  box-shadow: 0 0 10px rgba(192, 132, 252, 0.7), inset 0 0 5px rgba(192, 132, 252, 0.3) !important;
+}
+.cal-day-cell.has-task-purple:hover:not(.today-cell) {
+  background: rgba(192, 132, 252, 0.32) !important;
+  border-color: #e9d5ff !important;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.95), inset 0 0 6px rgba(192, 132, 252, 0.4) !important;
+}
+.cal-day-cell.today-cell.has-task-purple {
+  border: 2.5px solid #c084fc !important;
+  box-shadow: 0 0 14px rgba(192, 132, 252, 0.95), 0 0 8px rgba(16, 185, 129, 0.85) !important;
+}
+.cal-day-cell.other-month.has-task-purple {
+  border: 1.5px solid rgba(192, 132, 252, 0.6) !important;
+  background: rgba(192, 132, 252, 0.12) !important;
+  color: rgba(233, 213, 255, 0.85) !important;
+}
+
+/* 3. College Exams (Priority 3: Amber / Gold #fbbf24) */
+.cal-day-cell.has-task-amber {
+  border: 2px solid #fbbf24 !important;
+  background: rgba(251, 191, 36, 0.18) !important;
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.7), inset 0 0 5px rgba(251, 191, 36, 0.3) !important;
+}
+.cal-day-cell.has-task-amber:hover:not(.today-cell) {
+  background: rgba(251, 191, 36, 0.32) !important;
+  border-color: #fef08a !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), inset 0 0 6px rgba(251, 191, 36, 0.4) !important;
+}
+.cal-day-cell.today-cell.has-task-amber {
+  border: 2.5px solid #fbbf24 !important;
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.95), 0 0 8px rgba(16, 185, 129, 0.85) !important;
+}
+.cal-day-cell.other-month.has-task-amber {
+  border: 1.5px solid rgba(251, 191, 36, 0.6) !important;
+  background: rgba(251, 191, 36, 0.12) !important;
+  color: rgba(254, 240, 138, 0.85) !important;
+}
+
+/* 4. College Task (Priority 4: Emerald / Green #34d399) */
+.cal-day-cell.has-task-emerald {
+  border: 2px solid #34d399 !important;
+  background: rgba(52, 211, 153, 0.18) !important;
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.7), inset 0 0 5px rgba(52, 211, 153, 0.3) !important;
+}
+.cal-day-cell.has-task-emerald:hover:not(.today-cell) {
+  background: rgba(52, 211, 153, 0.32) !important;
+  border-color: #a7f3d0 !important;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.95), inset 0 0 6px rgba(52, 211, 153, 0.4) !important;
+}
+.cal-day-cell.today-cell.has-task-emerald {
+  border: 2.5px solid #34d399 !important;
+  box-shadow: 0 0 14px rgba(52, 211, 153, 0.95), 0 0 8px rgba(16, 185, 129, 0.85) !important;
+}
+.cal-day-cell.other-month.has-task-emerald {
+  border: 1.5px solid rgba(52, 211, 153, 0.6) !important;
+  background: rgba(52, 211, 153, 0.12) !important;
+  color: rgba(167, 243, 208, 0.85) !important;
 }
 
 /* Streak Container & Expansion (Default: 104px compact, Expanded: 220px ~210% with dates) */
