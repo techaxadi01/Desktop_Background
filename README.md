@@ -11,7 +11,7 @@ Built with an offline-first architecture, glassmorphic emerald aesthetics, dynam
 ### 🕒 1. Tactical Clock & Interactive Calendar
 - **Digital Clock**: 24-hour or 12-hour display with neon glow and day/date indicator.
 - **Interactive Calendar Dropdown**: Click the clock card to toggle the full-month interactive calendar.
-- **🎯 Category-Colored Calendar Highlighting**: Automatically scans active scheduled tasks and circles calendar dates in the category's glow color (Rose `#f43f5e` for *Last Date for Stuff*, Purple `#c084fc` for *Competitive Exams*, Amber `#fbbf24` for *College Exams*, and Emerald `#34d399` for *College Task*). When multiple tasks fall on the same date, conflicts resolve automatically by priority: **Last Date > Competitive Exam > College Exam > College Task**.
+- **🎯 Category-Colored Calendar Highlighting**: Automatically scans active scheduled tasks and circles calendar dates in the category's glow color (Rose `#f43f5e` for *Last Date for Stuff*, Purple `#c084fc` for *Competitive Exams*, Amber `#fbbf24` for *College Exams*, Emerald `#34d399` for *College Task*, and Sky Blue `#38bdf8` for *My Task*). When multiple tasks fall on the same date, conflicts resolve automatically by priority: **Last Date > Competitive Exam > College Exam > College Task > My Task**.
 
 ### 🔥 2. Consistency Streak Heatmap
 - **Contribution Heatmap**: Visual month-at-a-glance habit tracker showing daily completion percentages.
@@ -27,7 +27,7 @@ Built with an offline-first architecture, glassmorphic emerald aesthetics, dynam
 - **Dynamic Content Sizing**: Minimum height automatically conforms to **only the content shown**—no artificial empty voids when you have few tasks.
 - **Fluid Expansion**: Expands downwards item-by-item without scrollbars up to a reserved 4-desktop-icon boundary at the bottom.
 - **Organized Filtering**: Single-click tab switching between **Due Soon**, **Planned**, **All**, and **Done**.
-- **Category Styling**: Color-coded left-stripe indicators (*College Task*, *College Exams*, *Last Date for Stuff*, *Competitive Exams*).
+- **Category Styling**: Color-coded left-stripe indicators (*College Task*, *College Exams*, *Last Date for Stuff*, *Competitive Exams*, *My Task*).
 - **Inline Date Capsule**: Fast in-page date selector with one-click quick pills (`Today`, `Tmrw`, `+2d`, `+1wk`).
 - **Auto-Cleanup**: Tasks marked done are preserved and automatically purged after 24 hours.
 

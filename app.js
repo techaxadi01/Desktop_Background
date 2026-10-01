@@ -492,6 +492,7 @@ function renderCalendar() {
   // Priority 2: Competitive Exams (Purple)
   // Priority 3: College Exams (Amber)
   // Priority 4: College Task (Emerald - default)
+  // Priority 5: My Task (Sky / Cyan)
   const CATEGORY_PRIORITY = {
     "last date for stuff": 1,
     "last date": 1,
@@ -503,14 +504,17 @@ function renderCalendar() {
     "college exam": 3,
     "study": 3,
     "college task": 4,
-    "college": 4
+    "college": 4,
+    "my task": 5,
+    "my tasks": 5
   };
 
   const PRIORITY_CLASS_MAP = {
     1: "has-task-rose",
     2: "has-task-purple",
     3: "has-task-amber",
-    4: "has-task-emerald"
+    4: "has-task-emerald",
+    5: "has-task-sky"
   };
 
   // Map of date string (YYYY-MM-DD) -> highest priority category (1 is highest)
@@ -1284,10 +1288,14 @@ function renderTasks() {
 
   // 6. Category Left-Edge Color Stripe Palette (Saves space, clean indicator)
   const catBorderColors = {
+    "My Task": "border-l-[3px] border-l-sky-400",
     "College Task": "border-l-[3px] border-l-emerald-400",
+    "College Exam": "border-l-[3px] border-l-amber-400",
     "College Exams": "border-l-[3px] border-l-amber-400",
-    "Last Date for Stuff": "border-l-[3px] border-l-rose-500",
+    "Competitive Exam": "border-l-[3px] border-l-purple-400",
     "Competitive Exams": "border-l-[3px] border-l-purple-400",
+    "Last Date": "border-l-[3px] border-l-rose-500",
+    "Last Date for Stuff": "border-l-[3px] border-l-rose-500",
     // Backwards-compatible mappings for legacy items
     College: "border-l-[3px] border-l-emerald-400",
     Study: "border-l-[3px] border-l-blue-400",
@@ -1511,10 +1519,14 @@ function renderMyDay() {
       if (isDone) doneCount++;
 
       const catBorderColors = {
+        "My Task": "border-l-[3px] border-l-sky-400",
         "College Task": "border-l-[3px] border-l-emerald-400",
+        "College Exam": "border-l-[3px] border-l-amber-400",
         "College Exams": "border-l-[3px] border-l-amber-400",
-        "Last Date for Stuff": "border-l-[3px] border-l-rose-500",
+        "Competitive Exam": "border-l-[3px] border-l-purple-400",
         "Competitive Exams": "border-l-[3px] border-l-purple-400",
+        "Last Date": "border-l-[3px] border-l-rose-500",
+        "Last Date for Stuff": "border-l-[3px] border-l-rose-500",
         College: "border-l-[3px] border-l-emerald-400",
         Study: "border-l-[3px] border-l-blue-400",
         Urgent: "border-l-[3px] border-l-rose-500",
@@ -2458,17 +2470,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const val = taskCategory.value || "College Task";
 
     const colorMap = {
+      "My Task": { border: "border-l-sky-400", text: "text-sky-300" },
       "College Task": { border: "border-l-emerald-400", text: "text-emerald-300" },
+      "College Exam": { border: "border-l-amber-400", text: "text-amber-300" },
       "College Exams": { border: "border-l-amber-400", text: "text-amber-300" },
-      "Last Date for Stuff": { border: "border-l-rose-500", text: "text-rose-300" },
-      "Competitive Exams": { border: "border-l-purple-400", text: "text-purple-300" }
+      "Competitive Exam": { border: "border-l-purple-400", text: "text-purple-300" },
+      "Competitive Exams": { border: "border-l-purple-400", text: "text-purple-300" },
+      "Last Date": { border: "border-l-rose-500", text: "text-rose-300" },
+      "Last Date for Stuff": { border: "border-l-rose-500", text: "text-rose-300" }
     };
     const c = colorMap[val] || colorMap["College Task"];
 
     if (catCapsule) {
       catCapsule.classList.remove(
-        "border-l-emerald-400", "border-l-amber-400", "border-l-rose-500", "border-l-purple-400",
-        "text-emerald-300", "text-amber-300", "text-rose-300", "text-purple-300"
+        "border-l-emerald-400", "border-l-amber-400", "border-l-rose-500", "border-l-purple-400", "border-l-sky-400",
+        "text-emerald-300", "text-amber-300", "text-rose-300", "text-purple-300", "text-sky-300"
       );
       catCapsule.classList.add(c.border, c.text);
     }
