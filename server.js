@@ -106,10 +106,94 @@ function syncTimetableJsonToJs() {
   }
 }
 
+function syncStreakHistoryTxtToJs(fromBackup = false) {
+  const txtPath = path.join(ROOT, 'streak_history.txt');
+  const jsPath = path.join(ROOT, 'streak_history.js');
+  const backupPath = path.join(ROOT, 'data-backup.json');
+
+  const streakData = {};
+
+  if (fs.existsSync(txtPath)) {
+    try {
+      const raw = fs.readFileSync(txtPath, 'utf8');
+      const lines = raw.split(/\r?\n/);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('//') && !trimmed.startsWith('[')) {
+          const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})\s*[:=]\s*(\d+)/);
+          if (match) {
+            streakData[match[1]] = Math.min(100, Math.max(0, parseInt(match[2], 10)));
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Server] Failed to read streak_history.txt:', e.message);
+    }
+  }
+
+  // Merge from data-backup.json if called from /api/sync
+  let mergedNew = false;
+  if (fromBackup && fs.existsSync(backupPath)) {
+    try {
+      const rawBackup = fs.readFileSync(backupPath, 'utf8');
+      const backup = JSON.parse(rawBackup);
+      const dailyHistory = backup?.streak?.dailyHistory || {};
+      for (const [dateStr, pct] of Object.entries(dailyHistory)) {
+        const val = Math.min(100, Math.max(0, Number(pct) || 0));
+        if (streakData[dateStr] === undefined || streakData[dateStr] !== val) {
+          streakData[dateStr] = val;
+          mergedNew = true;
+        }
+      }
+    } catch (e) { }
+  }
+
+  if (mergedNew && fs.existsSync(txtPath)) {
+    try {
+      const header = (
+        "# ====================================================================\n" +
+        "# STREAK HISTORY (Daily Task Completion %)\n" +
+        "# ====================================================================\n" +
+        "# Format: YYYY-MM-DD: percentage (0 to 100)\n" +
+        "# Lines starting with # are comments.\n" +
+        "# ====================================================================\n\n"
+      );
+      const sortedDates = Object.keys(streakData).sort();
+      const content = header + sortedDates.map(d => `${d}: ${streakData[d]}`).join('\n') + '\n';
+      fs.writeFileSync(txtPath, content, 'utf8');
+    } catch (e) { }
+  }
+
+  try {
+    const jsContent = `// Auto-synced from streak_history.txt\nwindow.STREAK_HISTORY = ${JSON.stringify(streakData, null, 2)};\n`;
+    fs.writeFileSync(jsPath, jsContent, 'utf8');
+  } catch (e) {
+    console.error('[Server] Failed to write streak_history.js:', e.message);
+  }
+
+  // Also ensure data-backup.json streak.dailyHistory matches streak_history.txt when edited manually
+  if (!fromBackup && fs.existsSync(backupPath)) {
+    try {
+      const rawBackup = fs.readFileSync(backupPath, 'utf8');
+      const backup = JSON.parse(rawBackup);
+      if (backup && backup.streak) {
+        backup.streak.dailyHistory = { ...(backup.streak.dailyHistory || {}), ...streakData };
+        if (backup.streak.previousMonthsHistory) {
+          backup.streak.previousMonthsHistory = { ...backup.streak.previousMonthsHistory, ...streakData };
+        }
+        const updatedBackupJson = JSON.stringify(backup, null, 2);
+        fs.writeFileSync(backupPath, updatedBackupJson, 'utf8');
+        fs.writeFileSync(path.join(ROOT, 'data-backup.js'), `// Auto-generated backup data for offline file:/// recovery\nwindow.BACKUP_DATA = ${updatedBackupJson};\n`, 'utf8');
+      }
+    } catch (e) { }
+  }
+}
+
 // Run initial sync on startup
 syncDailyTasksTxtToJs();
 syncLinksTxtToJs();
 syncTimetableJsonToJs();
+syncStreakHistoryTxtToJs();
 
 // Watch for changes in plain text / json config files
 try {
@@ -124,6 +208,10 @@ try {
   const ttJson = path.join(ROOT, 'timetable.json');
   if (fs.existsSync(ttJson)) {
     fs.watch(ttJson, () => syncTimetableJsonToJs());
+  }
+  const streakTxt = path.join(ROOT, 'streak_history.txt');
+  if (fs.existsSync(streakTxt)) {
+    fs.watch(streakTxt, () => syncStreakHistoryTxtToJs());
   }
 } catch (e) { }
 
@@ -201,6 +289,7 @@ const server = http.createServer(async (req, res) => {
         }, null, 2);
         fs.writeFileSync(BACKUP_PATH, backupJson, 'utf8');
         fs.writeFileSync(path.join(ROOT, 'data-backup.js'), `// Auto-generated backup data for offline file:/// recovery\nwindow.BACKUP_DATA = ${backupJson};\n`, 'utf8');
+        syncStreakHistoryTxtToJs(true);
         return sendJSON(res, 200, { success: true, message: 'Saved to local backup' }, req);
       } catch (err) {
         return sendJSON(res, 400, { error: err.message }, req);

@@ -1,34 +1,145 @@
 // Auto-generated backup data for offline file:/// recovery
 window.BACKUP_DATA = {
-  "updatedAt": "2026-09-27T16:41:33Z",
-  "tasks": [],
-  "schedule": {
-    "11": "Statistics & Revision",
-    "14": "Coding & Problem Solving",
-    "17": "Evening Workout / Rest",
-    "20": "Project Development & Review",
-    "08": "DSA Lab / Lectures"
-  },
+  "updatedAt": "2026-10-01T02:55:32.807Z",
+  "tasks": [
+    {
+      "id": 1790747884515,
+      "text": "RM Lab 4",
+      "category": "College Task",
+      "date": "2026-10-03",
+      "done": true,
+      "createdAt": 1790747884515,
+      "completedAt": 1790751349378
+    },
+    {
+      "id": 1790747865924,
+      "text": "Python Lab 4",
+      "category": "College Task",
+      "date": "2026-09-30",
+      "done": true,
+      "createdAt": 1790747865924,
+      "completedAt": 1790747908466
+    },
+    {
+      "id": 1790734815450,
+      "text": "Adobe OA",
+      "category": "College Task",
+      "date": "2026-09-30",
+      "done": true,
+      "createdAt": 1790734815450,
+      "completedAt": 1790756041939
+    },
+    {
+      "id": 1790694982790,
+      "text": "CIA 1 PP",
+      "category": "College Task",
+      "date": "2026-10-01",
+      "done": false,
+      "createdAt": 1790694982790,
+      "completedAt": null
+    },
+    {
+      "id": 1790689643959,
+      "text": "Weeken War",
+      "category": "College Task",
+      "date": "2026-10-02",
+      "done": false,
+      "createdAt": 1790689643959,
+      "completedAt": null
+    },
+    {
+      "id": 1790656991455,
+      "text": "RM Lab 2 & 3",
+      "category": "College Task",
+      "date": "2026-10-03",
+      "done": true,
+      "createdAt": 1790656991455,
+      "completedAt": 1790751350306
+    },
+    {
+      "id": 1790613340130,
+      "text": "Learn Python",
+      "category": "College Task",
+      "date": "",
+      "done": false,
+      "createdAt": 1790613340130,
+      "completedAt": null
+    },
+    {
+      "id": 1790522984731,
+      "text": "Download AFCAT Video",
+      "category": "College Task",
+      "date": "",
+      "done": false,
+      "createdAt": 1790522984731,
+      "completedAt": null
+    },
+    {
+      "id": 1790492389069,
+      "text": "AFCAT SSB",
+      "category": "Competitive Exams",
+      "date": "2027-02-22",
+      "done": false,
+      "createdAt": 1790492389069,
+      "completedAt": null
+    }
+  ],
+  "schedule": {},
   "streak": {
-    "count": 0,
+    "count": 4,
     "lastCheckin": null,
     "history": [],
     "dailyHistory": {
       "2026-09-25": 0,
-      "2026-09-27": 0
+      "2026-09-26": 0,
+      "2026-09-27": 100,
+      "2026-09-28": 60,
+      "2026-09-29": 50,
+      "2026-09-30": 50,
+      "2026-10-01": 0,
+      "2026-09-01": 0,
+      "2026-09-02": 10,
+      "2026-09-03": 20,
+      "2026-09-04": 30,
+      "2026-09-05": 40,
+      "2026-09-06": 50,
+      "2026-09-07": 60,
+      "2026-09-08": 70,
+      "2026-09-09": 80,
+      "2026-09-10": 90,
+      "2026-09-11": 99,
+      "2026-09-12": 100
     },
-    "previousMonthsHistory": {},
-    "previousMonthsLoaded": false,
+    "previousMonthsHistory": {
+      "2026-09-01": 0,
+      "2026-09-02": 10,
+      "2026-09-03": 20,
+      "2026-09-04": 30,
+      "2026-09-05": 40,
+      "2026-09-06": 50,
+      "2026-09-07": 60,
+      "2026-09-08": 70,
+      "2026-09-09": 80,
+      "2026-09-10": 90,
+      "2026-09-11": 99,
+      "2026-09-12": 100,
+      "2026-09-25": 0,
+      "2026-09-26": 0,
+      "2026-09-27": 100,
+      "2026-09-28": 60,
+      "2026-09-29": 50,
+      "2026-09-30": 50,
+      "2026-10-01": 0
+    },
+    "previousMonthsLoaded": true,
     "isExpanded": false,
     "viewYear": 2026,
-    "viewMonth": 8
+    "viewMonth": 9
   },
   "settings": {
     "timeFormat": "24",
     "bgMode": "night",
-    "userName": "Pilot",
-    "useMongo": false,
-    "mongoUrl": "http://localhost:5000/api"
+    "userName": "Pilot"
   },
   "timetable": {
     "Monday": [

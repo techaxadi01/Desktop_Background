@@ -165,27 +165,72 @@ const Storage = {
 
       const savedStreak = localStorage.getItem("bg_streak");
       if (savedStreak) {
-        state.streak = { ...state.streak, ...JSON.parse(savedStreak) };
-      }
-
-      // Load CURRENT MONTH streak from localStorage exclusively (starts clean)
-      const savedCurrentMonth = localStorage.getItem("bg_streak_current_month");
-      if (savedCurrentMonth) {
         try {
-          const parsed = JSON.parse(savedCurrentMonth);
-          if (parsed && parsed.month === currentMonthKey && parsed.daily) {
-            state.streak.dailyHistory = parsed.daily;
-          }
+          state.streak = { ...state.streak, ...JSON.parse(savedStreak) };
         } catch (e) { }
       }
       if (!state.streak.dailyHistory) {
         state.streak.dailyHistory = {};
       }
 
-      state.streak.previousMonthsLoaded = false;
-      state.streak.previousMonthsHistory = {};
+      // 1. Merge persistent all-time streak history from localStorage
+      const savedAllHistory = localStorage.getItem("bg_streak_all_history");
+      if (savedAllHistory) {
+        try {
+          const parsedAll = JSON.parse(savedAllHistory);
+          if (parsedAll && typeof parsedAll === "object") {
+            state.streak.dailyHistory = { ...parsedAll, ...state.streak.dailyHistory };
+          }
+        } catch (e) { }
+      }
+
+      // 2. Merge legacy bg_streak_current_month if available
+      const savedCurrentMonth = localStorage.getItem("bg_streak_current_month");
+      if (savedCurrentMonth) {
+        try {
+          const parsed = JSON.parse(savedCurrentMonth);
+          if (parsed && parsed.daily) {
+            state.streak.dailyHistory = { ...parsed.daily, ...state.streak.dailyHistory };
+          }
+        } catch (e) { }
+      }
+
+      // 3. Merge backup data from file (window.BACKUP_DATA)
+      if (typeof window !== "undefined" && window.BACKUP_DATA && window.BACKUP_DATA.streak && window.BACKUP_DATA.streak.dailyHistory) {
+        for (const [dKey, val] of Object.entries(window.BACKUP_DATA.streak.dailyHistory)) {
+          state.streak.dailyHistory[dKey] = Math.max(state.streak.dailyHistory[dKey] || 0, Number(val));
+        }
+      }
+
+      // 4. Authoritative streak history from streak_history.txt / streak_history.js
+      if (typeof window !== "undefined" && window.STREAK_HISTORY && typeof window.STREAK_HISTORY === "object") {
+        for (const [dKey, val] of Object.entries(window.STREAK_HISTORY)) {
+          if (dKey < todayStr) {
+            state.streak.dailyHistory[dKey] = Number(val);
+          }
+        }
+        state.streak.previousMonthsHistory = { ...window.STREAK_HISTORY, ...state.streak.dailyHistory };
+      } else {
+        state.streak.previousMonthsHistory = { ...state.streak.dailyHistory };
+      }
+      if (typeof window !== "undefined") {
+        if (!window.STREAK_HISTORY) window.STREAK_HISTORY = {};
+        for (const [dKey, val] of Object.entries(state.streak.dailyHistory)) {
+          window.STREAK_HISTORY[dKey] = Number(val);
+        }
+      }
+      state.streak.previousMonthsLoaded = true;
       state.streak.viewYear = now.getFullYear();
       state.streak.viewMonth = now.getMonth();
+
+      // Clean/sync localStorage immediately with authoritative streak data
+      try {
+        localStorage.setItem("bg_streak_all_history", JSON.stringify(state.streak.dailyHistory || {}));
+        localStorage.setItem("bg_streak_current_month", JSON.stringify({
+          month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+          daily: state.streak.dailyHistory || {}
+        }));
+      } catch (e) { }
 
       const savedSettings = localStorage.getItem("bg_settings");
       if (savedSettings) state.settings = { ...state.settings, ...JSON.parse(savedSettings) };
@@ -225,11 +270,39 @@ const Storage = {
         }
       } else {
         // Daily reset: new day starts fresh so tasks repeat every day!
-        if (savedMyDayDate && state.streak.dailyHistory && state.streak.dailyHistory[savedMyDayDate] === undefined) {
+        if (savedMyDayDate) {
+          const yesterdayTasks = (state.tasks || []).filter(t => t.date === savedMyDayDate);
           let prevChecks = {};
           try { prevChecks = JSON.parse(localStorage.getItem("bg_my_day_checks") || "{}"); } catch (e) { }
-          const done = Object.values(prevChecks).filter(Boolean).length;
-          state.streak.dailyHistory[savedMyDayDate] = done >= 6 ? 100 : Math.round((done / 6) * 100);
+          const myDayDone = Object.values(prevChecks).filter(Boolean).length;
+          const todoDone = yesterdayTasks.filter(t => t.done).length;
+          const totalDone = myDayDone + todoDone;
+          const totalTasks = (state.myDay.tasks && state.myDay.tasks.length ? state.myDay.tasks.length : 7) + yesterdayTasks.length;
+          let prevPct = state.streak.dailyHistory[savedMyDayDate] || 0;
+          if (totalDone > 0 && totalTasks > 0) {
+            const calcPct = Math.round((totalDone / totalTasks) * 100);
+            prevPct = Math.max(prevPct, calcPct);
+          }
+          if (typeof window !== "undefined" && window.STREAK_HISTORY && window.STREAK_HISTORY[savedMyDayDate] !== undefined) {
+            prevPct = Math.max(prevPct, Number(window.STREAK_HISTORY[savedMyDayDate]));
+          }
+          if (prevPct > 0) {
+            state.streak.dailyHistory[savedMyDayDate] = prevPct;
+            if (typeof window !== "undefined") {
+              if (!window.STREAK_HISTORY) window.STREAK_HISTORY = {};
+              window.STREAK_HISTORY[savedMyDayDate] = prevPct;
+            }
+          }
+          try {
+            localStorage.setItem("bg_streak_all_history", JSON.stringify(state.streak.dailyHistory || {}));
+            localStorage.setItem("bg_streak_current_month", JSON.stringify({
+              month: currentMonthKey,
+              daily: state.streak.dailyHistory || {}
+            }));
+            localStorage.setItem("bg_streak", JSON.stringify(state.streak));
+          } catch (e) { }
+          updateStreakCountFromDailyTasks();
+          Storage.tryPushDiskBackup();
         }
         state.myDay.checks = {};
         localStorage.setItem("bg_my_day_date", todayStr);
@@ -258,6 +331,25 @@ const Storage = {
       localStorage.setItem("bg_todo_tab", state.activeTab || "due-soon");
       const now = new Date();
       const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+      if (typeof window !== "undefined" && window.STREAK_HISTORY) {
+        for (const [dKey, val] of Object.entries(window.STREAK_HISTORY)) {
+          if (dKey < todayKey) {
+            state.streak.dailyHistory[dKey] = Number(val);
+          }
+        }
+      }
+      if (typeof window !== "undefined") {
+        if (!window.STREAK_HISTORY) window.STREAK_HISTORY = {};
+        for (const [dKey, val] of Object.entries(state.streak.dailyHistory || {})) {
+          if (dKey < todayKey) {
+            window.STREAK_HISTORY[dKey] = Math.max(window.STREAK_HISTORY[dKey] || 0, Number(val));
+          } else {
+            window.STREAK_HISTORY[dKey] = Number(val);
+          }
+        }
+      }
+      localStorage.setItem("bg_streak_all_history", JSON.stringify(state.streak.dailyHistory || {}));
       localStorage.setItem("bg_streak_current_month", JSON.stringify({
         month: currentMonthKey,
         daily: state.streak.dailyHistory || {}
@@ -723,6 +815,50 @@ function setupDynamicTimetable() {
   window.addEventListener("resize", syncLayout);
 }
 
+// --- Wallpaper Background Image Handler (Smooth Crossfade with fallback to BG.jpg if BG1.jpg is missing) ---
+let bg1Verified = null;
+
+function setWallpaperBackground(isHide) {
+  const bgContainer = document.getElementById("bg-container");
+  const bgAlt = document.getElementById("bg-container-alt");
+  if (!bgContainer) return;
+
+  // Base background always displays BG.jpg
+  bgContainer.style.backgroundImage = `url('BG.jpg')`;
+
+  if (!bgAlt) {
+    if (isHide) {
+      const testImg = new Image();
+      testImg.onload = () => { if (document.body.classList.contains("focus-mode")) bgContainer.style.backgroundImage = `url('BG1.jpg')`; };
+      testImg.src = "BG1.jpg";
+    }
+    return;
+  }
+
+  if (bg1Verified === null) {
+    const testImg = new Image();
+    testImg.onload = () => {
+      bg1Verified = true;
+      bgAlt.style.backgroundImage = `url('BG1.jpg')`;
+      bgAlt.style.display = "";
+      bgAlt.style.opacity = isHide ? "1" : "0";
+    };
+    testImg.onerror = () => {
+      bg1Verified = false;
+      bgAlt.style.display = "none";
+      bgAlt.style.opacity = "0";
+    };
+    testImg.src = "BG1.jpg";
+  } else if (bg1Verified) {
+    bgAlt.style.backgroundImage = `url('BG1.jpg')`;
+    bgAlt.style.display = "";
+    bgAlt.style.opacity = isHide ? "1" : "0";
+  } else {
+    bgAlt.style.display = "none";
+    bgAlt.style.opacity = "0";
+  }
+}
+
 // --- Dynamic Time-Based Background System ---
 function applyTimeBackground() {
   const bgContainer = document.getElementById("bg-container");
@@ -739,7 +875,8 @@ function applyTimeBackground() {
     else mode = "night";
   }
 
-  bgContainer.style.backgroundImage = `url('BG.jpg')`;
+  const isHide = document.body.classList.contains("focus-mode");
+  setWallpaperBackground(isHide);
 
   switch (mode) {
     case "dawn":
@@ -1333,24 +1470,16 @@ function renderMyDay() {
     if (isDone) doneCount++;
 
     const item = document.createElement("div");
-    item.className = `my-day-item group flex items-center justify-between p-2 rounded-xl border transition-all cursor-pointer select-none ${
-      isDone
-        ? "bg-emerald-950/20 border-emerald-500/20 text-gray-400"
-        : "bg-black/40 border-white/5 hover:border-emerald-500/40 text-gray-200"
-    }`;
+    item.className = `my-day-item group flex items-center justify-between px-2 py-1 rounded-lg border border-white/5 border-l-[3px] border-l-emerald-400/80 hover:border-emerald-500/30 transition-all cursor-pointer select-none min-h-[28px] ${isDone
+      ? "bg-emerald-950/20 text-gray-400"
+      : "bg-black/30 hover:bg-black/40 text-gray-200"
+      }`;
 
     item.innerHTML = `
-      <div class="flex items-center gap-2.5 flex-1 min-w-0">
-        <div class="w-4 h-4 rounded-md border flex items-center justify-center transition-colors flex-shrink-0 ${
-          isDone
-            ? "bg-emerald-500 border-emerald-400 text-black shadow-sm"
-            : "border-white/20 group-hover:border-emerald-400/60 bg-black/30"
-        }">
-          ${isDone ? '<i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>' : ""}
-        </div>
-        <span class="text-xs truncate transition-all ${
-          isDone ? "line-through text-gray-500 opacity-70" : "text-gray-200 group-hover:text-white"
-        }">
+      <div class="flex items-center gap-2 flex-1 min-w-0 pr-1">
+        <input type="checkbox" ${isDone ? "checked" : ""} class="task-checkbox w-3.5 h-3.5 rounded border-gray-600 bg-black/60 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-emerald-500 flex-shrink-0 pointer-events-none">
+        <span class="text-xs truncate leading-tight transition-all ${isDone ? "line-through text-gray-500 opacity-70" : "text-gray-200 group-hover:text-white"
+      }">
           ${escapeHtml(taskText)}
         </span>
       </div>
@@ -1370,7 +1499,7 @@ function renderMyDay() {
 
   if (todayScheduledTasks.length > 0) {
     const divider = document.createElement("div");
-    divider.className = "pt-2 pb-1 border-t border-white/10 flex items-center justify-between text-[9px] text-emerald-400/90 font-mono uppercase tracking-wider select-none";
+    divider.className = "pt-1.5 pb-0.5 border-t border-white/10 flex items-center justify-between text-[9px] text-emerald-400/90 font-mono uppercase tracking-wider select-none";
     divider.innerHTML = `
       <span>Today's Tasks (${todayScheduledTasks.length})</span>
       <span class="text-[8px] text-emerald-400/60">From To-Do</span>
@@ -1394,24 +1523,16 @@ function renderMyDay() {
       const catBorder = catBorderColors[tTask.category] || "border-l-[3px] border-l-emerald-400";
 
       const item = document.createElement("div");
-      item.className = `my-day-item group flex items-center justify-between p-2 rounded-xl border border-white/5 ${catBorder} transition-all cursor-pointer select-none ${
-        isDone
-          ? "bg-emerald-950/20 text-gray-400"
-          : "bg-black/40 hover:border-emerald-400/50 text-gray-200"
-      }`;
+      item.className = `my-day-item group flex items-center justify-between px-2 py-1 rounded-lg border border-white/5 ${catBorder} hover:border-emerald-500/30 transition-all cursor-pointer select-none min-h-[28px] ${isDone
+        ? "bg-emerald-950/20 text-gray-400"
+        : "bg-black/30 hover:bg-black/40 text-gray-200"
+        }`;
 
       item.innerHTML = `
-        <div class="flex items-center gap-2.5 flex-1 min-w-0">
-          <div class="w-4 h-4 rounded-md border flex items-center justify-center transition-colors flex-shrink-0 ${
-            isDone
-              ? "bg-emerald-500 border-emerald-400 text-black shadow-sm"
-              : "border-white/20 group-hover:border-emerald-400/60 bg-black/30"
-          }">
-            ${isDone ? '<i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>' : ""}
-          </div>
-          <span class="text-xs truncate transition-all ${
-            isDone ? "line-through text-gray-500 opacity-70" : "text-gray-200 group-hover:text-white"
-          }">
+        <div class="flex items-center gap-2 flex-1 min-w-0 pr-1">
+          <input type="checkbox" ${isDone ? "checked" : ""} class="task-checkbox w-3.5 h-3.5 rounded border-gray-600 bg-black/60 text-emerald-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-emerald-500 flex-shrink-0 pointer-events-none">
+          <span class="text-xs truncate leading-tight transition-all ${isDone ? "line-through text-gray-500 opacity-70" : "text-gray-200 group-hover:text-white"
+        }">
             ${escapeHtml(tTask.text)}
           </span>
         </div>
@@ -1420,9 +1541,9 @@ function renderMyDay() {
       item.addEventListener("click", () => {
         tTask.done = !tTask.done;
         tTask.completedAt = tTask.done ? Date.now() : null;
+        renderMyDay();
         Storage.save();
         renderTasks();
-        renderMyDay();
         renderStreak();
       });
 
@@ -1433,7 +1554,7 @@ function renderMyDay() {
   // C. Empty state when no daily recurring tasks and no tasks scheduled for today
   if (state.myDay.tasks.length === 0 && todayScheduledTasks.length === 0) {
     const emptyNotice = document.createElement("div");
-    emptyNotice.className = "py-4 px-2 text-center text-xs text-gray-500 italic flex flex-col items-center gap-1 select-none";
+    emptyNotice.className = "py-3 px-2 text-center text-xs text-gray-500 italic flex flex-col items-center gap-1 select-none";
     emptyNotice.innerHTML = `
       <span>No daily tasks</span>
       <span class="text-[10px] text-gray-600 font-mono">Add items to daily_tasks.txt</span>
@@ -1446,13 +1567,13 @@ function renderMyDay() {
   if (list && list.children.length > 0) {
     const visibleChildren = Array.from(list.children).filter(el => !el.classList.contains("hidden"));
     visibleChildren.forEach((child, idx) => {
-      const itemH = child.offsetHeight || 36;
+      const itemH = child.offsetHeight || 28;
       myDayItemsHeight += itemH;
-      if (idx > 0) myDayItemsHeight += 6;
+      if (idx > 0) myDayItemsHeight += 4;
     });
   }
-  // Natural content height: header (36px) + bottom padding & border (12px) + items
-  const contentHeight = Math.max(38, 48 + myDayItemsHeight);
+  // Natural content height: header (36px) + bottom padding & border (8px) + items
+  const contentHeight = Math.max(38, 44 + myDayItemsHeight);
   const isMinimized = Boolean(state.myDay.minimized);
 
   if (container) {
@@ -1495,6 +1616,9 @@ function renderMyDay() {
   if (state.streak && state.streak.dailyHistory) {
     state.streak.dailyHistory[todayKey] = percent;
   }
+  if (typeof window !== "undefined" && window.STREAK_HISTORY) {
+    window.STREAK_HISTORY[todayKey] = percent;
+  }
 
   updateStreakCountFromDailyTasks();
   saveCurrentMonthStreak();
@@ -1507,8 +1631,8 @@ function renderMyDay() {
 
 function toggleMyDayTask(taskText) {
   state.myDay.checks[taskText] = !state.myDay.checks[taskText];
-  Storage.save();
   renderMyDay();
+  Storage.save();
   renderStreak();
 }
 
@@ -1528,12 +1652,33 @@ function checkMyDayNewDay() {
 
   if (state.myDay.date && state.myDay.date !== todayStr) {
     const prevDate = state.myDay.date;
+    
     // Finalize yesterday's completion percentage in daily history
-    if (state.streak.dailyHistory && state.streak.dailyHistory[prevDate] === undefined) {
-      const total = state.myDay.tasks.length;
-      let done = 0;
-      state.myDay.tasks.forEach(t => { if (state.myDay.checks[t]) done++; });
-      state.streak.dailyHistory[prevDate] = total > 0 ? Math.round((done / total) * 100) : 0;
+    let prevPct = (state.streak && state.streak.dailyHistory && state.streak.dailyHistory[prevDate] !== undefined)
+      ? Number(state.streak.dailyHistory[prevDate])
+      : 0;
+
+    const yesterdayTasks = (state.tasks || []).filter(t => t.date === prevDate);
+    const myDayTotal = (state.myDay.tasks || []).length + yesterdayTasks.length;
+    let myDayDone = 0;
+    (state.myDay.tasks || []).forEach(t => { if (state.myDay.checks && state.myDay.checks[t]) myDayDone++; });
+    yesterdayTasks.forEach(t => { if (t.done) myDayDone++; });
+
+    if (myDayTotal > 0 && myDayDone > 0) {
+      const calcPct = Math.round((myDayDone / myDayTotal) * 100);
+      prevPct = Math.max(prevPct, calcPct);
+    }
+    if (typeof window !== "undefined" && window.STREAK_HISTORY && window.STREAK_HISTORY[prevDate] !== undefined) {
+      prevPct = Math.max(prevPct, Number(window.STREAK_HISTORY[prevDate]));
+    }
+
+    if (prevPct > 0) {
+      if (!state.streak.dailyHistory) state.streak.dailyHistory = {};
+      state.streak.dailyHistory[prevDate] = prevPct;
+      if (typeof window !== "undefined") {
+        if (!window.STREAK_HISTORY) window.STREAK_HISTORY = {};
+        window.STREAK_HISTORY[prevDate] = prevPct;
+      }
     }
 
     // Reset daily tasks for the new day
@@ -1542,9 +1687,11 @@ function checkMyDayNewDay() {
     localStorage.setItem("bg_my_day_date", todayStr);
     localStorage.setItem("bg_my_day_checks", "{}");
 
-    // Recalculate streak for the new day
+    // Recalculate streak for the new day and save to disk
     updateStreakCountFromDailyTasks();
     saveCurrentMonthStreak();
+    Storage.save();
+    Storage.tryPushDiskBackup();
 
     renderMyDay();
     renderStreak();
@@ -1557,11 +1704,24 @@ function checkMyDayNewDay() {
 
 function saveCurrentMonthStreak() {
   const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  // Make sure STREAK_HISTORY past entries are always preserved
+  if (typeof window !== "undefined" && window.STREAK_HISTORY) {
+    for (const [dKey, val] of Object.entries(window.STREAK_HISTORY)) {
+      if (dKey < todayKey) {
+        state.streak.dailyHistory[dKey] = Number(val);
+      }
+    }
+  }
+
+  localStorage.setItem("bg_streak_all_history", JSON.stringify(state.streak.dailyHistory || {}));
   localStorage.setItem("bg_streak_current_month", JSON.stringify({
     month: currentMonthKey,
     daily: state.streak.dailyHistory || {}
   }));
+  Storage.tryPushDiskBackup();
 }
 
 function parseStreakHistoryTxt(text) {
@@ -1585,24 +1745,25 @@ function parseStreakHistoryTxt(text) {
 
 // Fetches previous months on-demand from streak_history.txt only when user clicks streak / previous month
 async function fetchPreviousMonthsHistory() {
-  if (state.streak.previousMonthsLoaded) {
-    return state.streak.previousMonthsHistory;
-  }
+  let history = (typeof window !== "undefined" && window.STREAK_HISTORY)
+    ? { ...window.STREAK_HISTORY }
+    : {};
 
-  let history = {};
   try {
     const res = await fetch("streak_history.txt?t=" + Date.now());
     if (res.ok) {
       const text = await res.text();
-      history = parseStreakHistoryTxt(text);
+      const parsed = parseStreakHistoryTxt(text);
+      history = { ...history, ...parsed };
+      if (typeof window !== "undefined") {
+        window.STREAK_HISTORY = { ...history };
+      }
+      for (const [dKey, val] of Object.entries(parsed)) {
+        state.streak.dailyHistory[dKey] = Math.max(state.streak.dailyHistory[dKey] || 0, Number(val));
+      }
     }
   } catch (e) {
-    // Local file protocol or network error
-  }
-
-  // Fallback to window.STREAK_HISTORY if fetch returned empty (for file:/// standalone protocol)
-  if (Object.keys(history).length === 0 && typeof window !== "undefined" && window.STREAK_HISTORY) {
-    history = { ...window.STREAK_HISTORY };
+    // Local file protocol or network error: uses window.STREAK_HISTORY
   }
 
   state.streak.previousMonthsHistory = history;
@@ -1610,15 +1771,54 @@ async function fetchPreviousMonthsHistory() {
   return history;
 }
 
-// Calculate active consecutive day completion streak
+// Helper to get true day completion percentage with strict authority priority:
+// 1. For past dates: window.STREAK_HISTORY (from streak_history.txt) is absolute source of truth!
+// 2. For today: live task completion takes precedence if active, else window.STREAK_HISTORY
+function getDayCompletion(dateKey) {
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+  // For past dates: window.STREAK_HISTORY (from streak_history.txt) is top authority
+  if (dateKey < todayKey) {
+    if (typeof window !== "undefined" && window.STREAK_HISTORY && window.STREAK_HISTORY[dateKey] !== undefined) {
+      return Number(window.STREAK_HISTORY[dateKey]);
+    }
+    if (state.streak && state.streak.dailyHistory && state.streak.dailyHistory[dateKey] !== undefined) {
+      return Number(state.streak.dailyHistory[dateKey]);
+    }
+    if (state.streak && state.streak.previousMonthsHistory && state.streak.previousMonthsHistory[dateKey] !== undefined) {
+      return Number(state.streak.previousMonthsHistory[dateKey]);
+    }
+    if (typeof window !== "undefined" && window.BACKUP_DATA && window.BACKUP_DATA.streak && window.BACKUP_DATA.streak.dailyHistory && window.BACKUP_DATA.streak.dailyHistory[dateKey] !== undefined) {
+      return Number(window.BACKUP_DATA.streak.dailyHistory[dateKey]);
+    }
+    return 0;
+  }
+
+  // For today: live daily tasks completion takes precedence
+  if (dateKey === todayKey) {
+    if (state.streak && state.streak.dailyHistory && state.streak.dailyHistory[todayKey] !== undefined) {
+      return Number(state.streak.dailyHistory[todayKey]);
+    }
+    if (typeof window !== "undefined" && window.STREAK_HISTORY && window.STREAK_HISTORY[todayKey] !== undefined) {
+      return Number(window.STREAK_HISTORY[todayKey]);
+    }
+    return 0;
+  }
+
+  return 0;
+}
+
+// Calculate active consecutive day completion streak (>= 50% completion maintains streak)
 function updateStreakCountFromDailyTasks() {
   const now = new Date();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const todayPercent = (state.streak.dailyHistory && state.streak.dailyHistory[todayKey] !== undefined)
-    ? state.streak.dailyHistory[todayKey]
-    : 0;
+  const todayPercent = getDayCompletion(todayKey);
 
-  let streak = (todayPercent >= 100) ? 1 : 0;
+  // Any day with >= 50% tasks completed qualifies as an active streak day!
+  const STREAK_THRESHOLD = 50;
+
+  let streak = (todayPercent >= STREAK_THRESHOLD) ? 1 : 0;
 
   // Walk backwards starting from yesterday
   let cur = new Date(now);
@@ -1626,15 +1826,9 @@ function updateStreakCountFromDailyTasks() {
 
   for (let i = 0; i < 365; i++) {
     const curKey = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, "0")}-${String(cur.getDate()).padStart(2, "0")}`;
-    let p = state.streak.dailyHistory ? state.streak.dailyHistory[curKey] : undefined;
-    if (p === undefined && state.streak.previousMonthsHistory) {
-      p = state.streak.previousMonthsHistory[curKey];
-    }
-    if (p === undefined && typeof window !== "undefined" && window.STREAK_HISTORY) {
-      p = window.STREAK_HISTORY[curKey];
-    }
+    const p = getDayCompletion(curKey);
 
-    if (p !== undefined && p >= 100) {
+    if (p >= STREAK_THRESHOLD) {
       streak++;
       cur.setDate(cur.getDate() - 1);
     } else {
@@ -1642,23 +1836,17 @@ function updateStreakCountFromDailyTasks() {
     }
   }
 
-  // If today is in progress (< 100%), maintain active streak from yesterday
-  if (todayPercent < 100) {
+  // If today is in progress (< STREAK_THRESHOLD), maintain active streak from yesterday
+  if (todayPercent < STREAK_THRESHOLD) {
     let yesterdayStreak = 0;
     let cur2 = new Date(now);
     cur2.setDate(cur2.getDate() - 1);
 
     for (let i = 0; i < 365; i++) {
       const curKey = `${cur2.getFullYear()}-${String(cur2.getMonth() + 1).padStart(2, "0")}-${String(cur2.getDate()).padStart(2, "0")}`;
-      let p = state.streak.dailyHistory ? state.streak.dailyHistory[curKey] : undefined;
-      if (p === undefined && state.streak.previousMonthsHistory) {
-        p = state.streak.previousMonthsHistory[curKey];
-      }
-      if (p === undefined && typeof window !== "undefined" && window.STREAK_HISTORY) {
-        p = window.STREAK_HISTORY[curKey];
-      }
+      const p = getDayCompletion(curKey);
 
-      if (p !== undefined && p >= 100) {
+      if (p >= STREAK_THRESHOLD) {
         yesterdayStreak++;
         cur2.setDate(cur2.getDate() - 1);
       } else {
@@ -1672,7 +1860,9 @@ function updateStreakCountFromDailyTasks() {
   return streak;
 }
 
-// --- Month Streak Day Tracker Engine (Red -> Yellow -> Green with 80%/100% threshold) ---
+// --- Month Streak Day Tracker Engine (Spectrum from Red to Green via Yellow) ---
+// 0% - 99% task completion spans 0% - 75% (0.0 to 0.75) of the gradient spectrum.
+// 100% task completion directly jumps to 100% (1.0) position of the gradient (Full Jewel Emerald Green).
 function getStreakGradient(percent) {
   if (percent === undefined || percent === null) {
     return {
@@ -1683,53 +1873,56 @@ function getStreakGradient(percent) {
     };
   }
 
-  // 100% Completion: Direct jump to pure vibrant emerald neon green
+  // 100% Completion: directly jumps to 100% position of the gradient (Full Jewel Emerald Green)
   if (percent >= 100) {
     return {
-      bg: "rgba(16, 185, 129, 0.85)",
-      border: "#00ff88",
-      color: "#05080c",
-      glow: "0 0 10px rgba(0, 255, 136, 0.8)"
+      bg: "rgba(16, 185, 129, 0.90)",
+      border: "#34d399",
+      color: "#ffffff",
+      glow: "0 0 8px rgba(16, 185, 129, 0.6)"
     };
   }
 
-  // 0% Completion: Red
-  if (percent <= 0) {
-    return {
-      bg: "rgba(239, 68, 68, 0.25)",
-      border: "rgba(239, 68, 68, 0.6)",
-      color: "#fca5a5",
-      glow: "0 0 4px rgba(239, 68, 68, 0.3)"
-    };
-  }
+  // 0% to 99% completion maps across 0% to 75% (0.0 to 0.75) of the spectrum
+  const clamped = Math.max(0, Math.min(percent, 99));
+  const pos = (clamped / 99) * 0.75;
 
-  // At 99% task completion, gradient is at only 80%
-  const factor = (percent / 99) * 0.80;
-
+  // Spectrum stops:
+  // Position 0.0 = Red [239, 68, 68]
+  // Position 0.5 = Yellow [234, 179, 8]
+  // Position 1.0 = Green [16, 185, 129]
   let r, g, b;
-  if (factor <= 0.40) {
-    // Red (239, 68, 68) -> Yellow (234, 179, 8)
-    const t = factor / 0.40;
+  if (pos <= 0.5) {
+    const t = pos / 0.5;
     r = Math.round(239 + (234 - 239) * t);
     g = Math.round(68 + (179 - 68) * t);
     b = Math.round(68 + (8 - 68) * t);
   } else {
-    // Yellow (234, 179, 8) -> 80% mark Yellow-Green (140, 205, 25)
-    const t = (factor - 0.40) / 0.40;
-    r = Math.round(234 + (140 - 234) * t);
-    g = Math.round(179 + (205 - 179) * t);
-    b = Math.round(8 + (25 - 8) * t);
+    const t = (pos - 0.5) / 0.5;
+    r = Math.round(234 + (16 - 234) * t);
+    g = Math.round(179 + (185 - 179) * t);
+    b = Math.round(8 + (129 - 8) * t);
   }
 
+  // Opacity & glow smoothly scale with completion percentage
+  const alpha = (0.28 + (pos / 0.75) * 0.48).toFixed(2);
+  const glowAlpha = (0.20 + (pos / 0.75) * 0.30).toFixed(2);
+
   return {
-    bg: `rgba(${r}, ${g}, ${b}, 0.35)`,
-    border: `rgba(${r}, ${g}, ${b}, 0.8)`,
-    color: "#ffffff",
-    glow: `0 0 6px rgba(${r}, ${g}, ${b}, 0.4)`
+    bg: `rgba(${r}, ${g}, ${b}, ${alpha})`,
+    border: `rgb(${r}, ${g}, ${b})`,
+    color: pos > 0.35 ? "#ffffff" : "#fca5a5",
+    glow: `0 0 5px rgba(${r}, ${g}, ${b}, ${glowAlpha})`
   };
 }
 
 function toggleStreakExpanded(expand) {
+  // When the streak is in week form (focus-mode), don't enlarge it when clicked
+  if (document.body.classList.contains("focus-mode")) {
+    state.streak.isExpanded = false;
+    return;
+  }
+
   state.streak.isExpanded = (typeof expand === "boolean") ? expand : !state.streak.isExpanded;
 
   // Enforce requirement: "keep only the current month in the streak by default"
@@ -1762,7 +1955,11 @@ function renderStreak() {
   const nowMonth = now.getMonth();
   const todayDate = now.getDate();
 
-  const isExpanded = !!state.streak.isExpanded;
+  // In week form, streak must never be enlarged
+  if (isHiddenMode) {
+    state.streak.isExpanded = false;
+  }
+  const isExpanded = !!state.streak.isExpanded && !isHiddenMode;
 
   if (isExpanded) {
     streakContainer?.classList.add("is-expanded");
@@ -1842,15 +2039,11 @@ function renderStreak() {
       const isToday = d.toDateString() === now.toDateString();
       const isPast = d < new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-      let completion = 0;
-      if (state.streak.dailyHistory && state.streak.dailyHistory[dateKey] !== undefined) {
-        completion = state.streak.dailyHistory[dateKey];
-      } else if (state.streak.previousMonthsHistory && state.streak.previousMonthsHistory[dateKey] !== undefined) {
-        completion = state.streak.previousMonthsHistory[dateKey];
-      }
+      const completion = getDayCompletion(dateKey);
 
       const box = document.createElement("div");
       box.className = "streak-day-box streak-week-box";
+      box.title = isToday ? `Today (${completion}% completed)` : `${dateKey}: ${completion}% completed`;
 
       if (isToday) {
         box.classList.add("streak-today-box", "ring-2", "ring-blue-400");
@@ -1906,29 +2099,17 @@ function renderStreak() {
 
       const isToday = isCurrentMonthView && (d === todayDate);
       const isPast = (viewYear < nowYear) ||
-                     (viewYear === nowYear && viewMonth < nowMonth) ||
-                     (isCurrentMonthView && d < todayDate);
+        (viewYear === nowYear && viewMonth < nowMonth) ||
+        (isCurrentMonthView && d < todayDate);
       const isFuture = (viewYear > nowYear) ||
-                       (viewYear === nowYear && viewMonth > nowMonth) ||
-                       (isCurrentMonthView && d > todayDate);
+        (viewYear === nowYear && viewMonth > nowMonth) ||
+        (isCurrentMonthView && d > todayDate);
 
-      let completion = 0;
-      if (isCurrentMonthView) {
-        completion = (state.streak.dailyHistory && state.streak.dailyHistory[dateKey] !== undefined)
-          ? state.streak.dailyHistory[dateKey]
-          : 0;
-      } else {
-        if (state.streak.previousMonthsHistory && state.streak.previousMonthsHistory[dateKey] !== undefined) {
-          completion = state.streak.previousMonthsHistory[dateKey];
-        } else if (typeof window !== "undefined" && window.STREAK_HISTORY && window.STREAK_HISTORY[dateKey] !== undefined) {
-          completion = window.STREAK_HISTORY[dateKey];
-        } else {
-          completion = 0;
-        }
-      }
+      const completion = getDayCompletion(dateKey);
+      box.title = isToday ? `Today (${completion}% completed)` : `${dateKey}: ${completion}% completed`;
 
       if (isToday) {
-        // Today is shown in vibrant BLUE!
+        // Today is always vibrant BLUE as before (no red or green tint)
         box.classList.add("streak-today-box");
       } else if (isPast) {
         // Previous days shown in gradient according to completion!
@@ -1964,6 +2145,9 @@ function setupStreakListeners() {
 
   // Clicking anywhere in the streak card maximizes it (or collapses when clicking header)
   streakCard?.addEventListener("click", (e) => {
+    // When the streak is in week form, don't enlarge it when clicked
+    if (document.body.classList.contains("focus-mode")) return;
+
     // If clicking on previous / next buttons, do not trigger card expand/collapse
     if (e.target.closest("button")) return;
 
@@ -1978,6 +2162,9 @@ function setupStreakListeners() {
 
   // Explicit listener on the dates grid: clicking any date box in compact view immediately maximizes
   daysGrid?.addEventListener("click", (e) => {
+    // When the streak is in week form, don't enlarge it when clicked
+    if (document.body.classList.contains("focus-mode")) return;
+
     if (!state.streak.isExpanded) {
       e.stopPropagation();
       toggleStreakExpanded(true);
@@ -2124,6 +2311,12 @@ function closeTimetableModal() {
 function toggleFocusMode() {
   document.body.classList.toggle("focus-mode");
   const isFocus = document.body.classList.contains("focus-mode");
+  try {
+    localStorage.setItem("bg_focus_mode", isFocus ? "true" : "false");
+  } catch (e) { }
+
+  setWallpaperBackground(isFocus);
+
   const btn = document.getElementById("dock-focus-btn");
   if (btn) {
     btn.innerHTML = `<i data-lucide="${isFocus ? "eye-off" : "eye"}" class="w-4 h-4 transition-transform group-hover:scale-110"></i>`;
@@ -2135,6 +2328,10 @@ function toggleFocusMode() {
       btn.classList.add("text-gray-300", "border-white/5");
     }
     safeCreateIcons();
+  }
+  // When entering focus mode (week form), ensure streak is never expanded
+  if (isFocus) {
+    state.streak.isExpanded = false;
   }
   // Re-render streak according to mode (Month when normal, Weekly boxes only when hidden mode is ON)
   renderStreak();
@@ -2156,6 +2353,20 @@ document.addEventListener("DOMContentLoaded", () => {
   Storage.load();
   updateClock();
   setInterval(updateClock, 1000);
+
+  // Restore focus / hide mode state if previously enabled
+  try {
+    const savedFocus = localStorage.getItem("bg_focus_mode");
+    if (savedFocus === "true") {
+      document.body.classList.add("focus-mode");
+      const btn = document.getElementById("dock-focus-btn");
+      if (btn) {
+        btn.innerHTML = `<i data-lucide="eye-off" class="w-4 h-4 transition-transform group-hover:scale-110"></i>`;
+        btn.classList.add("text-emerald-300", "border-emerald-400/60", "bg-emerald-500/25");
+        btn.classList.remove("text-gray-300", "border-white/5");
+      }
+    }
+  } catch (e) { }
 
   applyTimeBackground();
   // Check background lighting every 5 minutes
@@ -2192,7 +2403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderStreak();
   setupStreakListeners();
   renderConsoleLinks();
-  
+
   // Live auto-refresh: checks daily_tasks.txt every 10 seconds (safely checks if text hasn't changed)
   setInterval(() => {
     const taskInput = document.getElementById("new-task-input");
@@ -2431,13 +2642,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const cell = document.createElement("button");
       cell.type = "button";
       cell.textContent = d;
-      cell.className = `w-6 h-6 rounded text-[10px] font-mono flex items-center justify-center transition-all cursor-pointer select-none ${
-        isSelected
-          ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300"
-          : isToday
+      cell.className = `w-6 h-6 rounded text-[10px] font-mono flex items-center justify-center transition-all cursor-pointer select-none ${isSelected
+        ? "bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/40 ring-1 ring-emerald-300"
+        : isToday
           ? "border border-emerald-400 text-emerald-300 font-bold bg-emerald-950/40 hover:bg-emerald-500/30"
           : "text-gray-300 hover:bg-white/10 hover:text-white"
-      }`;
+        }`;
 
       cell.addEventListener("click", (e) => {
         if (e) e.stopPropagation();

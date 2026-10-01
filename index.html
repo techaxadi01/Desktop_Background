@@ -29,14 +29,19 @@
   <!-- Local Lucide Icons Engine (Offline / Lively Wallpaper Reliable) -->
   <script src="lucide.min.js"></script>
 
+  <!-- Background Images Preload -->
+  <link rel="preload" as="image" href="BG.jpg">
+  <link rel="preload" as="image" href="BG1.jpg">
+
   <!-- Custom Styles -->
-  <link rel="stylesheet" href="style.css?v=fix12">
+  <link rel="stylesheet" href="style.css?v=fix28">
 </head>
 
 <body class="bg-cyber-dark text-slate-100 overflow-hidden select-none">
 
-  <!-- Background Image & Atmospheric Lighting Layer -->
+  <!-- Background Image & Atmospheric Lighting Layer (Stacked layers for smooth cross-fade) -->
   <div id="bg-container"></div>
+  <div id="bg-container-alt"></div>
   <div id="bg-overlay"></div>
 
   <!-- Main Wallpaper Canvas: Uses template.png coordinates (Pointer events none on background, auto on widgets) -->
@@ -110,8 +115,7 @@
       <div id="streak-card"
         class="glass-panel p-2 rounded-xl border-emerald-500/25 flex flex-col justify-between shadow-xl cursor-pointer">
         <!-- Month Header with Previous / Next navigation -->
-        <div id="streak-header"
-          class="flex items-center justify-between pb-1 border-b border-white/10 select-none">
+        <div id="streak-header" class="flex items-center justify-between pb-1 border-b border-white/10 select-none">
           <button id="streak-prev-btn"
             class="hidden w-4 h-4 items-center justify-center text-gray-400 hover:text-emerald-300 hover:bg-white/10 rounded transition-colors cursor-pointer flex-shrink-0">
             <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
@@ -127,7 +131,8 @@
         </div>
 
         <!-- Weekday Headers (Visible only in expanded mode) -->
-        <div id="streak-weekdays-row" class="hidden grid-cols-7 gap-1 text-center pt-1.5 pb-0.5 border-b border-white/5 select-none">
+        <div id="streak-weekdays-row"
+          class="hidden grid-cols-7 gap-1 text-center pt-1.5 pb-0.5 border-b border-white/5 select-none">
           <span class="text-[8px] font-mono text-gray-400 font-bold">Mo</span>
           <span class="text-[8px] font-mono text-gray-400 font-bold">Tu</span>
           <span class="text-[8px] font-mono text-gray-400 font-bold">We</span>
@@ -171,8 +176,7 @@
     <!-- ========================================== -->
     <!-- 4. DAILY TASKS WIDGET ("MY DAY" Checklist - Matches Streak Width) -->
     <!-- ========================================== -->
-    <div id="scheduler-container"
-      class="wallpaper-widget pointer-events-auto absolute z-30 transition-all duration-300"
+    <div id="scheduler-container" class="wallpaper-widget pointer-events-auto absolute z-30 transition-all duration-300"
       style="width: 260px;">
       <div id="my-day-card"
         class="glass-panel rounded-xl border-emerald-500/25 flex flex-col shadow-xl overflow-hidden transition-all duration-300 w-full">
@@ -185,13 +189,14 @@
           </div>
           <button id="my-day-toggle-btn"
             class="w-4 h-4 flex items-center justify-center text-gray-400 hover:text-white transition-transform duration-200 cursor-pointer flex-shrink-0">
-            <i id="my-day-chevron" data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-300" style="transform: rotate(180deg);"></i>
+            <i id="my-day-chevron" data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-300"
+              style="transform: rotate(180deg);"></i>
           </button>
         </div>
 
         <!-- Collapsible Checklist Body (Dynamic height down to reserved rows at bottom) -->
-        <div id="my-day-body" class="px-2.5 pb-2.5 flex-1 min-h-0 flex flex-col">
-          <div id="my-day-tasks-list" class="space-y-1.5 flex-1 min-h-0 overflow-y-auto pr-1">
+        <div id="my-day-body" class="px-2 pb-2 flex-1 min-h-0 flex flex-col">
+          <div id="my-day-tasks-list" class="space-y-1 flex-1 min-h-0 overflow-y-auto pr-1">
             <!-- Daily tasks injected from txt file by app.js -->
           </div>
         </div>
@@ -247,24 +252,37 @@
             <!-- Custom Cyber Category Capsule (100% In-Page & Wallpaper Reliable) -->
             <div id="category-picker-capsule"
               class="relative flex-1 min-w-0 flex items-center justify-between h-[26px] bg-black/60 border border-white/10 border-l-[3px] border-l-emerald-400 rounded-lg px-2 text-[10px] text-emerald-300 transition-all cursor-pointer select-none">
-              <span id="category-picker-display" class="truncate font-sans font-medium select-none pointer-events-none">● College Task</span>
-              <i data-lucide="chevron-down" id="category-picker-chevron" class="w-3 h-3 text-gray-400 flex-shrink-0 transition-transform pointer-events-none ml-1"></i>
+              <span id="category-picker-display"
+                class="truncate font-sans font-medium select-none pointer-events-none">● College Task</span>
+              <i data-lucide="chevron-down" id="category-picker-chevron"
+                class="w-3 h-3 text-gray-400 flex-shrink-0 transition-transform pointer-events-none ml-1"></i>
             </div>
 
             <!-- In-Page Category Dropdown -->
             <div id="todo-category-dropdown"
               class="hidden absolute top-[30px] left-0 w-[155px] glass-panel border border-emerald-500/40 rounded-xl p-1.5 shadow-2xl z-50 flex-col gap-1 text-[10px]">
-              <button type="button" class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/20 text-emerald-300 font-sans transition-all cursor-pointer text-left w-full select-none" data-value="College Task">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span> College Task
+              <button type="button"
+                class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-emerald-500/20 text-emerald-300 font-sans transition-all cursor-pointer text-left w-full select-none"
+                data-value="College Task">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span> College
+                Task
               </button>
-              <button type="button" class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-amber-500/20 text-amber-300 font-sans transition-all cursor-pointer text-left w-full select-none" data-value="College Exams">
+              <button type="button"
+                class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-amber-500/20 text-amber-300 font-sans transition-all cursor-pointer text-left w-full select-none"
+                data-value="College Exams">
                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></span> College Exams
               </button>
-              <button type="button" class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-rose-500/20 text-rose-300 font-sans transition-all cursor-pointer text-left w-full select-none" data-value="Last Date for Stuff">
-                <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50"></span> Last Date for Stuff
+              <button type="button"
+                class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-rose-500/20 text-rose-300 font-sans transition-all cursor-pointer text-left w-full select-none"
+                data-value="Last Date for Stuff">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-400 shadow-sm shadow-rose-400/50"></span> Last Date for
+                Stuff
               </button>
-              <button type="button" class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-purple-500/20 text-purple-300 font-sans transition-all cursor-pointer text-left w-full select-none" data-value="Competitive Exams">
-                <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-sm shadow-purple-400/50"></span> Competitive Exams
+              <button type="button"
+                class="todo-cat-opt-btn flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-purple-500/20 text-purple-300 font-sans transition-all cursor-pointer text-left w-full select-none"
+                data-value="Competitive Exams">
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-sm shadow-purple-400/50"></span> Competitive
+                Exams
               </button>
             </div>
 
@@ -279,9 +297,13 @@
             <!-- Styled Date Picker Capsule -->
             <div id="date-picker-capsule"
               class="relative flex items-center h-[26px] rounded-lg bg-black/60 border border-white/10 hover:border-emerald-500/40 focus-within:border-emerald-400/80 transition-all px-2 gap-1.5 cursor-pointer w-[126px] flex-shrink-0 select-none">
-              <i data-lucide="calendar" id="date-picker-icon" class="w-3 h-3 text-emerald-400/70 flex-shrink-0 pointer-events-none transition-colors"></i>
-              <span id="date-picker-display" class="flex-1 text-[10px] text-gray-300 font-mono tracking-tight select-none pointer-events-none whitespace-nowrap">dd / mm / yyyy</span>
-              <i data-lucide="calendar" id="date-picker-trailing-icon" class="w-3 h-3 text-gray-400/60 flex-shrink-0 pointer-events-none transition-colors"></i>
+              <i data-lucide="calendar" id="date-picker-icon"
+                class="w-3 h-3 text-emerald-400/70 flex-shrink-0 pointer-events-none transition-colors"></i>
+              <span id="date-picker-display"
+                class="flex-1 text-[10px] text-gray-300 font-mono tracking-tight select-none pointer-events-none whitespace-nowrap">dd
+                / mm / yyyy</span>
+              <i data-lucide="calendar" id="date-picker-trailing-icon"
+                class="w-3 h-3 text-gray-400/60 flex-shrink-0 pointer-events-none transition-colors"></i>
               <button type="button" id="clear-task-date-btn"
                 class="hidden text-gray-400 hover:text-rose-400 p-0.5 rounded cursor-pointer transition-colors flex-shrink-0 z-20">
                 <i data-lucide="x" class="w-2.5 h-2.5"></i>
@@ -294,25 +316,37 @@
               class="hidden absolute top-[30px] right-0 w-[240px] bg-[#070d14]/95 border border-emerald-500/40 rounded-xl p-2.5 shadow-2xl backdrop-blur-xl z-50 flex-col">
               <!-- Quick Date Pills -->
               <div class="flex items-center gap-1 pb-2 mb-2 border-b border-white/10 text-[9px] font-mono">
-                <button type="button" class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer" data-days="0">Today</button>
-                <button type="button" class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer" data-days="1">Tmrw</button>
-                <button type="button" class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer" data-days="2">+2d</button>
-                <button type="button" class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer" data-days="7">+1wk</button>
+                <button type="button"
+                  class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer"
+                  data-days="0">Today</button>
+                <button type="button"
+                  class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer"
+                  data-days="1">Tmrw</button>
+                <button type="button"
+                  class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer"
+                  data-days="2">+2d</button>
+                <button type="button"
+                  class="todo-quick-date-btn flex-1 py-1 rounded bg-white/5 hover:bg-emerald-500/20 text-gray-300 hover:text-emerald-300 border border-white/5 transition-colors cursor-pointer"
+                  data-days="7">+1wk</button>
               </div>
 
               <!-- Month Navigation Header -->
               <div class="flex items-center justify-between pb-1.5 text-xs text-white">
-                <button type="button" id="todo-cal-prev-btn" class="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
+                <button type="button" id="todo-cal-prev-btn"
+                  class="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
                   <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
                 </button>
-                <span id="todo-cal-month-title" class="font-mono font-bold text-[11px] tracking-wide text-emerald-300">September 2026</span>
-                <button type="button" id="todo-cal-next-btn" class="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
+                <span id="todo-cal-month-title"
+                  class="font-mono font-bold text-[11px] tracking-wide text-emerald-300">September 2026</span>
+                <button type="button" id="todo-cal-next-btn"
+                  class="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 text-gray-400 hover:text-emerald-400 transition-colors cursor-pointer">
                   <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
                 </button>
               </div>
 
               <!-- Weekdays -->
-              <div class="grid grid-cols-7 gap-0.5 text-center text-[9px] font-mono text-emerald-400/80 font-semibold mb-1">
+              <div
+                class="grid grid-cols-7 gap-0.5 text-center text-[9px] font-mono text-emerald-400/80 font-semibold mb-1">
                 <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
               </div>
 
@@ -362,7 +396,8 @@
   </div>
 
   <!-- TIMETABLE MODAL (TT.jpeg Lightbox - 60% Viewport Bounds, Reduced Blur, Emerald Glass Widget Padding) -->
-  <div id="timetable-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-3 sm:p-5 cursor-pointer">
+  <div id="timetable-modal"
+    class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-3 sm:p-5 cursor-pointer">
     <div id="tt-modal-card"
       class="glass-panel p-1.5 rounded-xl flex items-center justify-center relative select-none cursor-pointer transition-all duration-200"
       style="max-width: 60vw; max-height: 60vh; width: min(60vw, calc((60vh - 12px) * 2.855 + 12px)); height: auto; background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(10, 25, 28, 0.78)); border: 1px solid rgba(52, 211, 153, 0.45); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 28px rgba(16, 185, 129, 0.35);">
@@ -376,10 +411,10 @@
   <!-- Automatic Backup Recovery, Configurable Links & Main JavaScript Engine -->
   <script src="data-backup.js"></script>
   <script id="daily-tasks-script-tag" src="daily_tasks.js"></script>
-  <script id="streak-history-script-tag" src="streak_history.js"></script>
+  <script id="streak-history-script-tag" src="streak_history.js?v=fix31"></script>
   <script id="links-script-tag" src="links.js"></script>
   <script id="timetable-script-tag" src="timetable.js"></script>
-  <script src="app.js?v=fix12"></script>
+  <script src="app.js?v=fix32"></script>
 </body>
 
 </html>

@@ -140,17 +140,31 @@ svg.lucide, .lucide {
   animation: flameWiggle 1.5s infinite ease-in-out;
 }
 
-/* Live Background Transitions */
-#bg-container {
+/* Live Background Transitions (Smooth Crossfade Between BG.jpg and BG1.jpg) */
+#bg-container,
+#bg-container-alt {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  background-image: url('BG.jpg');
   background-size: cover;
   background-position: center center;
-  transition: opacity 1.2s ease-in-out;
   z-index: 0;
+}
+
+#bg-container {
+  background-image: url('BG.jpg');
+}
+
+#bg-container-alt {
+  background-image: url('BG1.jpg');
+  opacity: 0;
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+body.focus-mode #bg-container-alt {
+  opacity: 1;
 }
 
 #bg-overlay {
@@ -373,6 +387,13 @@ body.focus-mode #streak-container {
 #streak-container:not(.is-expanded) .streak-day-box,
 #streak-container:not(.is-expanded) #streak-days-grid {
   cursor: pointer !important;
+}
+
+/* In week form (focus-mode), streak is NOT enlargeable - set default cursor */
+body.focus-mode #streak-card,
+body.focus-mode #streak-days-grid,
+body.focus-mode .streak-day-box {
+  cursor: default !important;
 }
 
 #streak-container.is-expanded .streak-expanded-box {
