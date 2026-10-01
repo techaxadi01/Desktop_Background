@@ -1,6 +1,15 @@
 {
-  "updatedAt": "2026-10-01T03:56:41.376Z",
+  "updatedAt": "2026-10-01T05:34:18.400Z",
   "tasks": [
+    {
+      "id": 1790832848766,
+      "text": "Mid Sem",
+      "category": "College Exam",
+      "date": "2026-10-12",
+      "done": false,
+      "createdAt": 1790832848766,
+      "completedAt": null
+    },
     {
       "id": 1790825180025,
       "text": "Weekend War",
