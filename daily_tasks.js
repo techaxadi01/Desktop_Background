@@ -1,4 +1,4 @@
-// Auto-synced from daily_tasks.txt by update_wallpaper.py
+// Auto-synced from daily_tasks.txt
 window.DAILY_TASKS = [
   "1 hr Python / Gen Clg Study",
   "DSA Video",

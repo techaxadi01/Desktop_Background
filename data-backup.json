@@ -1,6 +1,60 @@
 {
-  "updatedAt": "2026-10-01T05:34:18.400Z",
+  "updatedAt": "2026-10-04T10:36:58.192Z",
   "tasks": [
+    {
+      "id": 1791110218178,
+      "text": "Weekend War 1",
+      "category": "My Task",
+      "date": "2026-10-04",
+      "done": false,
+      "createdAt": 1791110218178,
+      "completedAt": null
+    },
+    {
+      "id": 1791026165655,
+      "text": "GCR download",
+      "category": "College Task",
+      "date": "",
+      "done": false,
+      "createdAt": 1791026165655,
+      "completedAt": null
+    },
+    {
+      "id": 1791026116354,
+      "text": "Seperate github CPP DSA R / GO",
+      "category": "College Task",
+      "date": "",
+      "done": false,
+      "createdAt": 1791026116354,
+      "completedAt": null
+    },
+    {
+      "id": 1791025858969,
+      "text": "DSA LAB 3",
+      "category": "College Task",
+      "date": "2026-10-07",
+      "done": false,
+      "createdAt": 1791025858969,
+      "completedAt": null
+    },
+    {
+      "id": 1791025844710,
+      "text": "Stats CIA",
+      "category": "College Exam",
+      "date": "2026-10-07",
+      "done": false,
+      "createdAt": 1791025844710,
+      "completedAt": null
+    },
+    {
+      "id": 1790866866793,
+      "text": "Stats Assignment",
+      "category": "College Task",
+      "date": "2026-10-06",
+      "done": false,
+      "createdAt": 1790866866793,
+      "completedAt": null
+    },
     {
       "id": 1790832848766,
       "text": "Mid Sem",
@@ -8,78 +62,6 @@
       "date": "2026-10-12",
       "done": false,
       "createdAt": 1790832848766,
-      "completedAt": null
-    },
-    {
-      "id": 1790825180025,
-      "text": "Weekend War",
-      "category": "My Task",
-      "date": "2026-10-02",
-      "done": false,
-      "createdAt": 1790825180025,
-      "completedAt": null
-    },
-    {
-      "id": 1790747884515,
-      "text": "RM Lab 4",
-      "category": "College Task",
-      "date": "2026-10-03",
-      "done": true,
-      "createdAt": 1790747884515,
-      "completedAt": 1790751349378
-    },
-    {
-      "id": 1790747865924,
-      "text": "Python Lab 4",
-      "category": "College Task",
-      "date": "2026-09-30",
-      "done": true,
-      "createdAt": 1790747865924,
-      "completedAt": 1790747908466
-    },
-    {
-      "id": 1790734815450,
-      "text": "Adobe OA",
-      "category": "College Task",
-      "date": "2026-09-30",
-      "done": true,
-      "createdAt": 1790734815450,
-      "completedAt": 1790756041939
-    },
-    {
-      "id": 1790694982790,
-      "text": "CIA 1 PP",
-      "category": "College Task",
-      "date": "2026-10-01",
-      "done": false,
-      "createdAt": 1790694982790,
-      "completedAt": null
-    },
-    {
-      "id": 1790656991455,
-      "text": "RM Lab 2 & 3",
-      "category": "College Task",
-      "date": "2026-10-03",
-      "done": true,
-      "createdAt": 1790656991455,
-      "completedAt": 1790751350306
-    },
-    {
-      "id": 1790613340130,
-      "text": "Learn Python",
-      "category": "College Task",
-      "date": "",
-      "done": false,
-      "createdAt": 1790613340130,
-      "completedAt": null
-    },
-    {
-      "id": 1790522984731,
-      "text": "Download AFCAT Video",
-      "category": "College Task",
-      "date": "",
-      "done": false,
-      "createdAt": 1790522984731,
       "completedAt": null
     },
     {
@@ -94,17 +76,10 @@
   ],
   "schedule": {},
   "streak": {
-    "count": 4,
+    "count": 2,
     "lastCheckin": null,
     "history": [],
     "dailyHistory": {
-      "2026-09-25": 0,
-      "2026-09-26": 0,
-      "2026-09-27": 100,
-      "2026-09-28": 60,
-      "2026-09-29": 50,
-      "2026-09-30": 50,
-      "2026-10-01": 0,
       "2026-09-01": 0,
       "2026-09-02": 10,
       "2026-09-03": 20,
@@ -116,7 +91,17 @@
       "2026-09-09": 80,
       "2026-09-10": 90,
       "2026-09-11": 99,
-      "2026-09-12": 100
+      "2026-09-12": 100,
+      "2026-09-25": 0,
+      "2026-09-26": 0,
+      "2026-09-27": 100,
+      "2026-09-28": 60,
+      "2026-09-29": 50,
+      "2026-09-30": 50,
+      "2026-10-01": 44,
+      "2026-10-02": 50,
+      "2026-10-03": 56,
+      "2026-10-04": 0
     },
     "previousMonthsHistory": {
       "2026-09-01": 0,
@@ -137,7 +122,9 @@
       "2026-09-28": 60,
       "2026-09-29": 50,
       "2026-09-30": 50,
-      "2026-10-01": 0
+      "2026-10-01": 44,
+      "2026-10-02": 50,
+      "2026-10-03": 56
     },
     "previousMonthsLoaded": true,
     "isExpanded": false,
