@@ -1,7 +1,25 @@
 // Auto-generated backup data for offline file:/// recovery
 window.BACKUP_DATA = {
-  "updatedAt": "2026-10-04T10:36:58.192Z",
+  "updatedAt": "2026-10-05T11:18:34.884Z",
   "tasks": [
+    {
+      "id": 1791178992910,
+      "text": "Python HackerRank",
+      "category": "College Task",
+      "date": "2026-10-06",
+      "done": true,
+      "createdAt": 1791178992910,
+      "completedAt": 1791199114877
+    },
+    {
+      "id": 1791121190436,
+      "text": "DSA Video Questions",
+      "category": "College Task",
+      "date": "",
+      "done": false,
+      "createdAt": 1791121190436,
+      "completedAt": null
+    },
     {
       "id": 1791110218178,
       "text": "Weekend War 1",
@@ -25,9 +43,9 @@ window.BACKUP_DATA = {
       "text": "Seperate github CPP DSA R / GO",
       "category": "College Task",
       "date": "",
-      "done": false,
+      "done": true,
       "createdAt": 1791026116354,
-      "completedAt": null
+      "completedAt": 1791165868034
     },
     {
       "id": 1791025858969,
@@ -52,9 +70,9 @@ window.BACKUP_DATA = {
       "text": "Stats Assignment",
       "category": "College Task",
       "date": "2026-10-06",
-      "done": false,
+      "done": true,
       "createdAt": 1790866866793,
-      "completedAt": null
+      "completedAt": 1791138122042
     },
     {
       "id": 1790832848766,
@@ -77,7 +95,7 @@ window.BACKUP_DATA = {
   ],
   "schedule": {},
   "streak": {
-    "count": 2,
+    "count": 3,
     "lastCheckin": null,
     "history": [],
     "dailyHistory": {
@@ -102,7 +120,8 @@ window.BACKUP_DATA = {
       "2026-10-01": 44,
       "2026-10-02": 50,
       "2026-10-03": 56,
-      "2026-10-04": 0
+      "2026-10-04": 75,
+      "2026-10-05": 13
     },
     "previousMonthsHistory": {
       "2026-09-01": 0,
@@ -125,7 +144,9 @@ window.BACKUP_DATA = {
       "2026-09-30": 50,
       "2026-10-01": 44,
       "2026-10-02": 50,
-      "2026-10-03": 56
+      "2026-10-03": 56,
+      "2026-10-04": 75,
+      "2026-10-05": 13
     },
     "previousMonthsLoaded": true,
     "isExpanded": false,
