@@ -195,10 +195,12 @@ const Storage = {
         } catch (e) { }
       }
 
-      // 3. Merge backup data from file (window.BACKUP_DATA)
+      // 3. Merge backup data from file (window.BACKUP_DATA) - PAST DATES ONLY
       if (typeof window !== "undefined" && window.BACKUP_DATA && window.BACKUP_DATA.streak && window.BACKUP_DATA.streak.dailyHistory) {
         for (const [dKey, val] of Object.entries(window.BACKUP_DATA.streak.dailyHistory)) {
-          state.streak.dailyHistory[dKey] = Math.max(state.streak.dailyHistory[dKey] || 0, Number(val));
+          if (dKey < todayStr) {
+            state.streak.dailyHistory[dKey] = Math.max(state.streak.dailyHistory[dKey] || 0, Number(val));
+          }
         }
       }
 
@@ -216,7 +218,9 @@ const Storage = {
       if (typeof window !== "undefined") {
         if (!window.STREAK_HISTORY) window.STREAK_HISTORY = {};
         for (const [dKey, val] of Object.entries(state.streak.dailyHistory)) {
-          window.STREAK_HISTORY[dKey] = Number(val);
+          if (dKey < todayStr) {
+            window.STREAK_HISTORY[dKey] = Number(val);
+          }
         }
       }
       state.streak.previousMonthsLoaded = true;
@@ -261,6 +265,11 @@ const Storage = {
       const savedMyDayDate = localStorage.getItem("bg_my_day_date");
       state.myDay.minimized = false;
       localStorage.setItem("bg_my_day_minimized", "false");
+
+      // Initialize recurring tasks synchronously from window.DAILY_TASKS if present
+      if (typeof window !== "undefined" && Array.isArray(window.DAILY_TASKS) && window.DAILY_TASKS.length > 0) {
+        state.myDay.tasks = window.DAILY_TASKS.filter(Boolean);
+      }
 
       if (savedMyDayDate === todayStr) {
         try {
@@ -1385,9 +1394,7 @@ function addTask(text, category = "College Task", date = "") {
   state.tasks.unshift(newTask);
   Storage.save();
   renderTasks();
-  if (newTask.date) {
-    renderMyDay();
-  }
+  renderMyDay();
 }
 
 // --- MY DAY Daily Checklist Engine (Repeats daily, loaded from daily_tasks.txt) ---
@@ -1448,6 +1455,79 @@ async function loadMyDayTasks(forceRender = false) {
   }
 }
 
+// Helper to determine if a task was completed on a specific YYYY-MM-DD date
+function isTaskDoneOnDate(t, dateStr) {
+  if (!t || !t.done) return false;
+  if (t.completedAt) {
+    const d = new Date(t.completedAt);
+    if (!isNaN(d.getTime())) {
+      const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return ymd === dateStr;
+    }
+  }
+  return t.date === dateStr;
+}
+
+// Authoritative calculator for today's task completion percentage:
+// Formula:
+// % = (done in my day + done due today + done over due + done extra from TODO) /
+//     (My Day + Over due + due Today + done extra from TODO) * 100
+function getTodayCompletionPercent() {
+  const now = new Date();
+  const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+  // 1. My Day (Daily recurring tasks from daily_tasks.txt)
+  const dailyTasks = (state.myDay && state.myDay.tasks && state.myDay.tasks.length > 0)
+    ? state.myDay.tasks
+    : ((typeof window !== "undefined" && Array.isArray(window.DAILY_TASKS)) ? window.DAILY_TASKS.filter(Boolean) : []);
+
+  let doneInMyDay = 0;
+  dailyTasks.forEach(t => {
+    if (state.myDay && state.myDay.checks && state.myDay.checks[t]) {
+      doneInMyDay++;
+    }
+  });
+  const totalMyDay = dailyTasks.length;
+
+  // 2. Due Today (To-Do tasks scheduled for today)
+  const dueTodayTasks = (state.tasks || []).filter(t => t.date === todayYMD);
+  const totalDueToday = dueTodayTasks.length;
+  const doneDueToday = dueTodayTasks.filter(t => t.done).length;
+
+  // 3. Overdue (To-Do tasks with date in the past that are pending or were completed today)
+  const overdueTasks = (state.tasks || []).filter(t => {
+    if (t.date && t.date < todayYMD) {
+      return !t.done || isTaskDoneOnDate(t, todayYMD);
+    }
+    return false;
+  });
+  const totalOverdue = overdueTasks.length;
+  const doneOverdue = overdueTasks.filter(t => t.done).length;
+
+  // 4. Extra from TODO (tasks completed today that were not due today and not overdue)
+  const extraDoneTasks = (state.tasks || []).filter(t => {
+    if (t.date === todayYMD) return false;
+    if (t.date && t.date < todayYMD) return false;
+    return isTaskDoneOnDate(t, todayYMD);
+  });
+  const doneExtraFromTodo = extraDoneTasks.length;
+
+  const numerator = doneInMyDay + doneDueToday + doneOverdue + doneExtraFromTodo;
+  const denominator = totalMyDay + totalOverdue + totalDueToday + doneExtraFromTodo;
+
+  if (denominator === 0) {
+    return 0;
+  }
+
+  // If any required task in My Day, Due Today, or Overdue is pending, today can never be 100%!
+  if (numerator < denominator) {
+    return Math.min(99, Math.round((numerator / denominator) * 100));
+  }
+
+  // All required tasks for today are 100% complete!
+  return numerator > 0 ? 100 : 0;
+}
+
 function renderMyDay() {
   const card = document.getElementById("my-day-card");
   const body = document.getElementById("my-day-body");
@@ -1500,21 +1580,42 @@ function renderMyDay() {
     list.appendChild(item);
   });
 
-  // B. To-Do Tasks scheduled for today
+  // B. To-Do Tasks for Today: STRICTLY Due Today + Overdue only
   const now = new Date();
   const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const todayScheduledTasks = (state.tasks || []).filter(t => t.date === todayYMD);
 
-  if (todayScheduledTasks.length > 0) {
+  const todoTasksForMyDay = (state.tasks || []).filter(t => {
+    // 1. Due today
+    if (t.date === todayYMD) return true;
+    // 2. Overdue: dated in the past. Include if pending, or if completed today!
+    if (t.date && t.date < todayYMD) {
+      return !t.done || isTaskDoneOnDate(t, todayYMD);
+    }
+    return false;
+  });
+
+  // Sort: Pending tasks first (overdue first, then today), then completed tasks
+  todoTasksForMyDay.sort((a, b) => {
+    if (Boolean(a.done) !== Boolean(b.done)) {
+      return a.done ? 1 : -1;
+    }
+    if (a.date && b.date) return a.date.localeCompare(b.date);
+    if (a.date && !b.date) return -1;
+    if (!a.date && b.date) return 1;
+    return (b.id || 0) - (a.id || 0);
+  });
+
+  if (todoTasksForMyDay.length > 0) {
+    const overdueCount = todoTasksForMyDay.filter(t => !t.done && t.date && t.date < todayYMD).length;
     const divider = document.createElement("div");
     divider.className = "pt-1.5 pb-0.5 border-t border-white/10 flex items-center justify-between text-[9px] text-emerald-400/90 font-mono uppercase tracking-wider select-none";
     divider.innerHTML = `
-      <span>Today's Tasks (${todayScheduledTasks.length})</span>
-      <span class="text-[8px] text-emerald-400/60">From To-Do</span>
+      <span>To-Do Tasks (${todoTasksForMyDay.length})${overdueCount > 0 ? ` <span class="text-rose-400 font-semibold">• ${overdueCount} Overdue</span>` : ""}</span>
+      <span class="text-[8px] text-emerald-400/60">Due / Overdue</span>
     `;
     list.appendChild(divider);
 
-    todayScheduledTasks.forEach((tTask) => {
+    todoTasksForMyDay.forEach((tTask) => {
       const isDone = Boolean(tTask.done);
       if (isDone) doneCount++;
 
@@ -1533,6 +1634,8 @@ function renderMyDay() {
         Project: "border-l-[3px] border-l-purple-400"
       };
       const catBorder = catBorderColors[tTask.category] || "border-l-[3px] border-l-emerald-400";
+      const isOverdue = Boolean(tTask.date && tTask.date < todayYMD);
+      const overdueBadge = isOverdue ? getTaskDateBadge(tTask.date) : null;
 
       const item = document.createElement("div");
       item.className = `my-day-item group flex items-center justify-between px-2 py-1 rounded-lg border border-white/5 ${catBorder} hover:border-emerald-500/30 transition-all cursor-pointer select-none min-h-[28px] ${isDone
@@ -1548,6 +1651,12 @@ function renderMyDay() {
             ${escapeHtml(tTask.text)}
           </span>
         </div>
+        ${overdueBadge ? `
+          <span class="px-1.5 py-0.2 rounded border flex items-center gap-1 text-[8px] leading-none ${overdueBadge.className} flex-shrink-0">
+            <i data-lucide="${overdueBadge.icon}" class="w-2.5 h-2.5"></i>
+            <span>${overdueBadge.text}</span>
+          </span>
+        ` : ""}
       `;
 
       item.addEventListener("click", () => {
@@ -1563,8 +1672,8 @@ function renderMyDay() {
     });
   }
 
-  // C. Empty state when no daily recurring tasks and no tasks scheduled for today
-  if (state.myDay.tasks.length === 0 && todayScheduledTasks.length === 0) {
+  // C. Empty state when no daily recurring tasks and no tasks from todo for today
+  if (state.myDay.tasks.length === 0 && todoTasksForMyDay.length === 0) {
     const emptyNotice = document.createElement("div");
     emptyNotice.className = "py-3 px-2 text-center text-xs text-gray-500 italic flex flex-col items-center gap-1 select-none";
     emptyNotice.innerHTML = `
@@ -1622,8 +1731,7 @@ function renderMyDay() {
 
 
   // 4. Update today's streak tile to reflect daily task completion percentage!
-  const grandTotal = state.myDay.tasks.length + todayScheduledTasks.length;
-  const percent = grandTotal > 0 ? Math.round((doneCount / grandTotal) * 100) : 0;
+  const percent = getTodayCompletionPercent();
   const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   if (state.streak && state.streak.dailyHistory) {
     state.streak.dailyHistory[todayKey] = percent;
@@ -1664,13 +1772,23 @@ function checkMyDayNewDay() {
 
   if (state.myDay.date && state.myDay.date !== todayStr) {
     const prevDate = state.myDay.date;
-    
+
     // Finalize yesterday's completion percentage in daily history
     let prevPct = (state.streak && state.streak.dailyHistory && state.streak.dailyHistory[prevDate] !== undefined)
       ? Number(state.streak.dailyHistory[prevDate])
       : 0;
 
-    const yesterdayTasks = (state.tasks || []).filter(t => t.date === prevDate);
+    const yesterdayTasks = (state.tasks || []).filter(t => {
+      if (t.date === prevDate) return true;
+      if (t.completedAt) {
+        const d = new Date(t.completedAt);
+        if (!isNaN(d.getTime())) {
+          const ymd = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+          return ymd === prevDate;
+        }
+      }
+      return false;
+    });
     const myDayTotal = (state.myDay.tasks || []).length + yesterdayTasks.length;
     let myDayDone = 0;
     (state.myDay.tasks || []).forEach(t => { if (state.myDay.checks && state.myDay.checks[t]) myDayDone++; });
@@ -1807,15 +1925,9 @@ function getDayCompletion(dateKey) {
     return 0;
   }
 
-  // For today: live daily tasks completion takes precedence
+  // For today: live task completion takes absolute precedence!
   if (dateKey === todayKey) {
-    if (state.streak && state.streak.dailyHistory && state.streak.dailyHistory[todayKey] !== undefined) {
-      return Number(state.streak.dailyHistory[todayKey]);
-    }
-    if (typeof window !== "undefined" && window.STREAK_HISTORY && window.STREAK_HISTORY[todayKey] !== undefined) {
-      return Number(window.STREAK_HISTORY[todayKey]);
-    }
-    return 0;
+    return getTodayCompletionPercent();
   }
 
   return 0;
@@ -1873,8 +1985,9 @@ function updateStreakCountFromDailyTasks() {
 }
 
 // --- Month Streak Day Tracker Engine (Spectrum from Red to Green via Yellow) ---
-// 0% - 99% task completion spans 0% - 75% (0.0 to 0.75) of the gradient spectrum.
-// 100% task completion directly jumps to 100% (1.0) position of the gradient (Full Jewel Emerald Green).
+// 0% completion: gradient is at 0.0 (Pure Red).
+// 1% - 99% completion: jumps directly to 10% (0.10) at 1% and smoothly scales to 75% (0.75) at 99%.
+// 100% completion: directly jumps to 100% (1.0) position of the gradient (Full Jewel Emerald Green).
 function getStreakGradient(percent) {
   if (percent === undefined || percent === null) {
     return {
@@ -1895,9 +2008,20 @@ function getStreakGradient(percent) {
     };
   }
 
-  // 0% to 99% completion maps across 0% to 75% (0.0 to 0.75) of the spectrum
-  const clamped = Math.max(0, Math.min(percent, 99));
-  const pos = (clamped / 99) * 0.75;
+  // 0% Completion: slightly deeper and darker red (red-600)
+  if (percent <= 0) {
+    return {
+      bg: "rgba(220, 38, 38, 0.30)",
+      border: "rgba(220, 38, 38, 0.65)",
+      color: "#fca5a5",
+      glow: "0 0 4px rgba(220, 38, 38, 0.28)"
+    };
+  }
+
+  // 1% to 99% completion: jumps directly to 10% (0.10) at 1%, scaling up to 75% (0.75) at 99%
+  const clamped = Math.max(1, Math.min(percent, 99));
+  const norm = (clamped - 1) / 98; // 0.0 at 1%, 1.0 at 99%
+  const pos = 0.10 + norm * (0.75 - 0.10);
 
   // Spectrum stops:
   // Position 0.0 = Red [239, 68, 68]
@@ -1917,8 +2041,8 @@ function getStreakGradient(percent) {
   }
 
   // Opacity & glow smoothly scale with completion percentage
-  const alpha = (0.28 + (pos / 0.75) * 0.48).toFixed(2);
-  const glowAlpha = (0.20 + (pos / 0.75) * 0.30).toFixed(2);
+  const alpha = (0.28 + norm * 0.48).toFixed(2);
+  const glowAlpha = (0.20 + norm * 0.30).toFixed(2);
 
   return {
     bg: `rgba(${r}, ${g}, ${b}, ${alpha})`,

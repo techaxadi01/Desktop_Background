@@ -243,14 +243,17 @@ def sync_streak_history():
         except Exception as e:
             log_err(f"Error reading streak_history.txt: {e}")
 
-    # 2. Merge dailyHistory recorded in data-backup.json
+    # 2. Merge dailyHistory recorded in data-backup.json (past dates only)
     merged_new = False
     if os.path.exists(backup_path):
         try:
+            today_str = time.strftime("%Y-%m-%d")
             with open(backup_path, "r", encoding="utf-8") as f:
                 backup = json.load(f)
                 daily_history = backup.get("streak", {}).get("dailyHistory", {})
                 for date_str, percent in daily_history.items():
+                    if date_str >= today_str:
+                        continue  # Skip today & future dates - today is active and not finalized
                     val = min(100, max(0, int(percent)))
                     if date_str not in streak_data or streak_data[date_str] != val:
                         streak_data[date_str] = val

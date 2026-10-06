@@ -1,7 +1,16 @@
 // Auto-generated backup data for offline file:/// recovery
 window.BACKUP_DATA = {
-  "updatedAt": "2026-10-05T11:18:34.884Z",
+  "updatedAt": "2026-10-06T11:10:30.578Z",
   "tasks": [
+    {
+      "id": 1791280916550,
+      "text": "RM LAB 5",
+      "category": "College Task",
+      "date": "2026-10-11",
+      "done": false,
+      "createdAt": 1791280916550,
+      "completedAt": null
+    },
     {
       "id": 1791178992910,
       "text": "Python HackerRank",
@@ -9,7 +18,7 @@ window.BACKUP_DATA = {
       "date": "2026-10-06",
       "done": true,
       "createdAt": 1791178992910,
-      "completedAt": 1791199114877
+      "completedAt": 1791206943924
     },
     {
       "id": 1791121190436,
@@ -25,9 +34,9 @@ window.BACKUP_DATA = {
       "text": "Weekend War 1",
       "category": "My Task",
       "date": "2026-10-04",
-      "done": false,
+      "done": true,
       "createdAt": 1791110218178,
-      "completedAt": null
+      "completedAt": 1791264926749
     },
     {
       "id": 1791026165655,
@@ -39,22 +48,13 @@ window.BACKUP_DATA = {
       "completedAt": null
     },
     {
-      "id": 1791026116354,
-      "text": "Seperate github CPP DSA R / GO",
-      "category": "College Task",
-      "date": "",
-      "done": true,
-      "createdAt": 1791026116354,
-      "completedAt": 1791165868034
-    },
-    {
       "id": 1791025858969,
       "text": "DSA LAB 3",
       "category": "College Task",
       "date": "2026-10-07",
-      "done": false,
+      "done": true,
       "createdAt": 1791025858969,
-      "completedAt": null
+      "completedAt": 1791224465474
     },
     {
       "id": 1791025844710,
@@ -64,15 +64,6 @@ window.BACKUP_DATA = {
       "done": false,
       "createdAt": 1791025844710,
       "completedAt": null
-    },
-    {
-      "id": 1790866866793,
-      "text": "Stats Assignment",
-      "category": "College Task",
-      "date": "2026-10-06",
-      "done": true,
-      "createdAt": 1790866866793,
-      "completedAt": 1791138122042
     },
     {
       "id": 1790832848766,
@@ -95,7 +86,7 @@ window.BACKUP_DATA = {
   ],
   "schedule": {},
   "streak": {
-    "count": 3,
+    "count": 5,
     "lastCheckin": null,
     "history": [],
     "dailyHistory": {
@@ -111,6 +102,7 @@ window.BACKUP_DATA = {
       "2026-09-10": 90,
       "2026-09-11": 99,
       "2026-09-12": 100,
+      "2026-09-13": 100,
       "2026-09-25": 0,
       "2026-09-26": 0,
       "2026-09-27": 100,
@@ -121,7 +113,8 @@ window.BACKUP_DATA = {
       "2026-10-02": 50,
       "2026-10-03": 56,
       "2026-10-04": 75,
-      "2026-10-05": 13
+      "2026-10-05": 75,
+      "2026-10-06": 50
     },
     "previousMonthsHistory": {
       "2026-09-01": 0,
@@ -136,6 +129,7 @@ window.BACKUP_DATA = {
       "2026-09-10": 90,
       "2026-09-11": 99,
       "2026-09-12": 100,
+      "2026-09-13": 100,
       "2026-09-25": 0,
       "2026-09-26": 0,
       "2026-09-27": 100,
@@ -146,7 +140,8 @@ window.BACKUP_DATA = {
       "2026-10-02": 50,
       "2026-10-03": 56,
       "2026-10-04": 75,
-      "2026-10-05": 13
+      "2026-10-05": 75,
+      "2026-10-06": 40
     },
     "previousMonthsLoaded": true,
     "isExpanded": false,

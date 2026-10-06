@@ -33,7 +33,7 @@ Built with an offline-first architecture, glassmorphic emerald aesthetics, dynam
 
 ### ✅ 5. "MY DAY" Daily Habits Checklist
 - **Recurring Routine Tracker**: Loads daily repeating habits from `daily_tasks.txt`.
-- **Integrated Daily Missions**: Automatically merges tasks scheduled for today from your To-Do list.
+- **Integrated Daily Missions**: Automatically merges tasks scheduled for today and overdue pending tasks from your To-Do list, while also giving streak credit for any other To-Do tasks completed today.
 - **Collapsible Body**: Click the header or chevron to minimize/expand the checklist with smooth animations.
 
 ### 🚀 6. Quick Action Console Dock

@@ -137,8 +137,11 @@ function syncStreakHistoryTxtToJs(fromBackup = false) {
     try {
       const rawBackup = fs.readFileSync(backupPath, 'utf8');
       const backup = JSON.parse(rawBackup);
+      const now = new Date();
+      const todayYMD = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const dailyHistory = backup?.streak?.dailyHistory || {};
       for (const [dateStr, pct] of Object.entries(dailyHistory)) {
+        if (dateStr >= todayYMD) continue; // Past dates only - today is active and not finalized!
         const val = Math.min(100, Math.max(0, Number(pct) || 0));
         if (streakData[dateStr] === undefined || streakData[dateStr] !== val) {
           streakData[dateStr] = val;
