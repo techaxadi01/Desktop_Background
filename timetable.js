@@ -1,4 +1,4 @@
-// Auto-synced from timetable.json
+// Auto-synced from timetable.json by update_wallpaper.py
 window.TIMETABLE_CACHE = {
   "Monday": [
     {

@@ -93,8 +93,8 @@ svg.lucide, .lucide {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -103,13 +103,17 @@ svg.lucide, .lucide {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.4);
   border-radius: 4px;
   transition: background 0.2s;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.75);
+  background: rgba(16, 185, 129, 0.8);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: rgb(16, 185, 129);
 }
 
 /* Animations */
@@ -614,25 +618,41 @@ body.focus-mode .streak-day-box {
   transform: translateY(-1px);
 }
 
+#my-day-tasks-list,
+#task-list {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.45) rgba(0, 0, 0, 0.3);
+}
+
 #my-day-tasks-list::-webkit-scrollbar,
 #task-list::-webkit-scrollbar {
-  width: 3px;
+  width: 7px;
 }
 
 #my-day-tasks-list::-webkit-scrollbar-track,
 #task-list::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
 }
 
 #my-day-tasks-list::-webkit-scrollbar-thumb,
 #task-list::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
-  border-radius: 2px;
+  background: rgba(16, 185, 129, 0.45);
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 #my-day-tasks-list::-webkit-scrollbar-thumb:hover,
 #task-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.6);
+  background: rgba(16, 185, 129, 0.8);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+#my-day-tasks-list::-webkit-scrollbar-thumb:active,
+#task-list::-webkit-scrollbar-thumb:active {
+  background: rgb(16, 185, 129);
+  border-color: rgb(52, 211, 153);
 }
 
 #console-container {

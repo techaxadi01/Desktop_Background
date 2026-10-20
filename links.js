@@ -1,4 +1,4 @@
-// Auto-synced from links.txt
+// Auto-synced from links.txt by update_wallpaper.py
 window.CONSOLE_LINKS = [
   {
     "name": "Google Classroom",
